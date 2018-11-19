@@ -3,13 +3,19 @@
 #include <netorcai-client-cpp/client.hpp>
 #include <netorcai-client-cpp/error.hpp>
 
+#include "hexabomb-parse.hpp"
+
 int main()
 {
     using namespace netorcai;
 
     try
     {
-        Client c;
+        netorcai::Client c;
+        std::unordered_map<Coordinates, Cell> cells;
+        std::vector<Character> characters;
+        std::vector<Bomb> bombs;
+        std::map<int, int> score, cellCount;
 
         printf("Connecting to netorcai... "); fflush(stdout);
         c.connect();
@@ -24,12 +30,16 @@ int main()
         const GameStartsMessage gameStarts = c.readGameStarts();
         printf("done\n");
 
+        parseInitialGameState(gameStarts.initialGameState, cells, characters, bombs);
+
         for (int i = 1; i < gameStarts.nbTurnsMax; i++)
         {
             printf("Waiting for TURN... "); fflush(stdout);
             const TurnMessage turn = c.readTurn();
             c.sendTurnAck(turn.turnNumber, json::parse(R"([{"player": "D"}])"));
             printf("done\n");
+
+            parseGameState(turn.gameState, cells, characters, bombs, score, cellCount);
         }
 
         printf("Waiting for GAME_ENDS... "); fflush(stdout);

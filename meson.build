@@ -7,7 +7,13 @@ netorcai_client_cpp_dep = dependency('netorcai-client-cpp',
     fallback: ['netorcai-client-cpp', 'netorcai_client_cpp_dep']
 )
 
-player = executable('hexabomb-visu', ['src/main.cpp'],
+src = [
+    'src/main.cpp',
+    'src/hexabomb-parse.cpp',
+    'src/hexabomb-parse.hpp'
+]
+
+visu = executable('hexabomb-visu', src,
     dependencies: [netorcai_client_cpp_dep],
     install: true, install_dir: 'bin'
 )
