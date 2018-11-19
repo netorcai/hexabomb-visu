@@ -6,6 +6,7 @@ project('hexabomb-visu', 'cpp',
 netorcai_client_cpp_dep = dependency('netorcai-client-cpp',
     fallback: ['netorcai-client-cpp', 'netorcai_client_cpp_dep']
 )
+sfml_graphics_dep = dependency('sfml-graphics', required: true)
 
 src = [
     'src/main.cpp',
@@ -14,6 +15,6 @@ src = [
 ]
 
 visu = executable('hexabomb-visu', src,
-    dependencies: [netorcai_client_cpp_dep],
+    dependencies: [netorcai_client_cpp_dep, sfml_graphics_dep],
     install: true, install_dir: 'bin'
 )
