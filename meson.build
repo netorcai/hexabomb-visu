@@ -11,7 +11,9 @@ sfml_graphics_dep = dependency('sfml-graphics', required: true)
 src = [
     'src/main.cpp',
     'src/hexabomb-parse.cpp',
-    'src/hexabomb-parse.hpp'
+    'src/hexabomb-parse.hpp',
+    'src/renderer.cpp',
+    'src/renderer.hpp'
 ]
 
 visu = executable('hexabomb-visu', src,
