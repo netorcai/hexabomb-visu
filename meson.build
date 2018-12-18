@@ -7,16 +7,20 @@ netorcai_client_cpp_dep = dependency('netorcai-client-cpp',
     fallback: ['netorcai-client-cpp', 'netorcai_client_cpp_dep']
 )
 sfml_graphics_dep = dependency('sfml-graphics', required: true)
+boost_dep = dependency('boost', required: true)
+threads_dep = dependency('threads')
 
 src = [
     'src/main.cpp',
     'src/hexabomb-parse.cpp',
     'src/hexabomb-parse.hpp',
     'src/renderer.cpp',
-    'src/renderer.hpp'
+    'src/renderer.hpp',
+    'src/threads.cpp',
+    'src/threads.hpp'
 ]
 
 visu = executable('hexabomb-visu', src,
-    dependencies: [netorcai_client_cpp_dep, sfml_graphics_dep],
+    dependencies: [netorcai_client_cpp_dep, sfml_graphics_dep, boost_dep, threads_dep],
     install: true, install_dir: 'bin'
 )
