@@ -1,11 +1,20 @@
 rule svg_to_png
     command = inkscape --export-png=$out -f $in
 
+rule svg_to_png_high_dpi
+    command = inkscape -d 1024 --export-png=$out -f $in
+
 rule resize_png_256x256
     command = convert -background transparent -gravity center $in -resize 256x256 -extent 256x256 $out
+
+rule resize_png_256x256_no_extent
+    command = convert -background transparent -gravity center $in -resize 256x256 $out
 
 build bomb_big.png: svg_to_png bomb.svg
 build bomb.png: resize_png_256x256 bomb_big.png
 
 build char_big.png: svg_to_png char.svg
 build char.png: resize_png_256x256 char_big.png
+
+build empty_big.png: svg_to_png_high_dpi empty.svg
+build empty.png: resize_png_256x256_no_extent empty_big.png
