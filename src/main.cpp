@@ -4,10 +4,15 @@
 #include <netorcai-client-cpp/error.hpp>
 
 #include "hexabomb-parse.hpp"
+#include "renderer.hpp"
 
 int main()
 {
     using namespace netorcai;
+
+    sf::RenderWindow window(sf::VideoMode(800, 600), "hexabomb-visu");
+    HexabombRenderer renderer;
+    window.display();
 
     try
     {
@@ -30,16 +35,23 @@ int main()
         const GameStartsMessage gameStarts = c.readGameStarts();
         printf("done\n");
 
+        //printf("GAME_STARTS game state:\n%s\n", gameStarts.initialGameState.dump().c_str());
         parseInitialGameState(gameStarts.initialGameState, cells, characters, bombs);
+
+        renderer.onGameInit(cells, characters, bombs);
+        renderer.render(window);
 
         for (int i = 1; i < gameStarts.nbTurnsMax; i++)
         {
             printf("Waiting for TURN... "); fflush(stdout);
             const TurnMessage turn = c.readTurn();
-            c.sendTurnAck(turn.turnNumber, json::parse(R"([{"player": "D"}])"));
+            c.sendTurnAck(turn.turnNumber, json::parse(R"([])"));
             printf("done\n");
 
+            //printf("TURN %d game state:\n%s\n", i, turn.gameState.dump().c_str());
             parseGameState(turn.gameState, cells, characters, bombs, score, cellCount);
+            renderer.onTurn(cells, characters, bombs, score, cellCount);
+            renderer.render(window);
         }
 
         printf("Waiting for GAME_ENDS... "); fflush(stdout);
