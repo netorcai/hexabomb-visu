@@ -77,10 +77,12 @@ void HexabombRenderer::onGameInit(
     }
 
     // Set view
-    // TODO: avoid stretching
-    _boardView.reset(sf::FloatRect(xmin-_textureSize/2.0, ymin-_textureSize/2.0,
+    _boardBoundingBox = sf::FloatRect(
+        xmin-_textureSize/2.0, ymin-_textureSize/2.0,
         xmax - xmin + _textureSize,
-        ymax - ymin + _textureSize));
+        ymax - ymin + _textureSize
+    );
+    _boardView.reset(_boardBoundingBox);
 }
 
 void HexabombRenderer::onTurn(
@@ -145,6 +147,30 @@ void HexabombRenderer::render(sf::RenderWindow & window)
 
     // Finally update the screen
     window.display();
+}
+
+void HexabombRenderer::updateView(int newWidth, int newHeight)
+{
+    // https://en.sfml-dev.org/forums/index.php?topic=15802.msg113936#msg113936
+    float screenWidth = newWidth;
+    float screenHeight = newHeight;
+
+    sf::FloatRect viewport;
+    viewport.width = 1.f;
+    viewport.height = 1.f;
+
+    if(screenWidth > screenHeight)
+    {
+        viewport.width = screenHeight / screenWidth;
+        viewport.left = (1.f - viewport.width) / 2.f;
+    }
+    else if(screenWidth < screenHeight)
+    {
+        viewport.height = screenWidth / screenHeight;
+        viewport.top = (1.f - viewport.height) / 2.f;
+    }
+
+    _boardView.setViewport(viewport);
 }
 
 void HexabombRenderer::generatePlayerColors(int nbColors)

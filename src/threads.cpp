@@ -117,6 +117,8 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             // User wanted to close the window.
             if (event.type == sf::Event::Closed)
                 window.close();
+            else if (event.type == sf::Event::Resized)
+                renderer.updateView(event.size.width, event.size.height);
         }
 
         // Something has been received from the network?

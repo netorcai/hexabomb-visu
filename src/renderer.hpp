@@ -27,6 +27,7 @@ public:
         const std::map<int, int> & cellCount);
 
     void render(sf::RenderWindow & window);
+    void updateView(int newWidth, int newHeight);
 
 private:
     void generatePlayerColors(int nbColors);
@@ -43,5 +44,6 @@ private:
     std::vector<sf::Color> _colors;
     const float _textureSize = 256.0f;
     const sf::Color _backgroundColor = sf::Color(64, 64, 64);
+    sf::FloatRect _boardBoundingBox;
     sf::View _boardView;
 };
