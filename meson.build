@@ -3,12 +3,10 @@ project('hexabomb-visu', 'cpp',
     version: '0.1.0'
 )
 
-netorcai_client_cpp_dep = dependency('netorcai-client-cpp',
-    fallback: ['netorcai-client-cpp', 'netorcai_client_cpp_dep']
-)
+netorcai_client_cpp_dep = dependency('netorcai-client-cpp', required: true)
 sfml_graphics_dep = dependency('sfml-graphics', required: true)
 boost_dep = dependency('boost', modules: ['filesystem', 'system'], required: true)
-threads_dep = dependency('threads')
+threads_dep = dependency('threads', required: true)
 
 src = [
     'src/main.cpp',

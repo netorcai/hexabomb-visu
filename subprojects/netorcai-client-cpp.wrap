@@ -1,6 +1,0 @@
-[wrap-file]
-directory = netorcai-client-cpp-1.0.0
-
-source_url = https://github.com/netorcai/netorcai-client-cpp/archive/v1.0.0.tar.gz
-source_filename = netorcai-client-cpp-1.0.0.tar.gz
-source_hash = 50cb631b88e8865c9ae222ff847a3284d1a86558d6e726f013375ea60e5c8ec8
