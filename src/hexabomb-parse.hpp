@@ -53,8 +53,7 @@ struct Bomb
 struct Cell
 {
     Coordinates coord; //!< The cell coordinates. Immutable.
-    int color; //!< The cell color. Value remains -1 forever for walls.
-    bool isWall; //!< Whether the cell is a wall. Immutable.
+    int color; //!< The cell color. Mutable.
 };
 
 void parseInitialGameState(const netorcai::json & initialGameState,

@@ -65,7 +65,7 @@ static void parsePlayerIntMap(const netorcai::json & jsonObject, std::map<int, i
 /**
  * @brief Parse a netorcai initial game state for the hexabomb game
  * @param[in] gameState The game state to parse (json object)
- * @param[out] cells The board cells. The color of all non-walls cells be put to neutral, which is wrong for cells where characters will be spawned.
+ * @param[out] cells The board cells.
  * @param[out] characters The characters on the board.
  * @param[out] bombs The bombs on the board.
  */
@@ -83,10 +83,7 @@ void parseInitialGameState(const netorcai::json & initialGameState,
 
         Cell c;
         c.coord = coord;
-        c.isWall = jsonCell["wall"];
-        // Initial color is not sent in initial game state.
-        // Setting neutral (0) for non-walls and -1 for walls.
-        c.color = c.isWall ? -1: 0;
+        c.color = jsonCell["color"];
 
         cells[coord] = c;
     }
