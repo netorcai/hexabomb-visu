@@ -1,5 +1,7 @@
 #include "renderer.hpp"
 
+#include "util.hpp"
+
 static sf::Vector2f axialToCartesian(Coordinates axial)
 {
     double base_length = 128.0;
@@ -13,9 +15,9 @@ static sf::Vector2f axialToCartesian(Coordinates axial)
 
 HexabombRenderer::HexabombRenderer()
 {
-    _bombTexture.loadFromFile("assets/img/bomb.png");
-    _characterTexture.loadFromFile("assets/img/char.png");
-    _emptyTexture.loadFromFile("assets/img/empty.png");
+    _bombTexture.loadFromFile(searchImageAbsoluteFilename("bomb.png"));
+    _characterTexture.loadFromFile(searchImageAbsoluteFilename("char.png"));
+    _emptyTexture.loadFromFile(searchImageAbsoluteFilename("empty.png"));
 }
 
 HexabombRenderer::~HexabombRenderer()
