@@ -15,9 +15,10 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
     {
         netorcai::Client c;
         Message msg;
-        GameStartsMessage * gameStartsOnHeap = nullptr;
-        GameEndsMessage * gameEndsOnHeap = nullptr;
-        TurnMessage * turnOnHeap = nullptr;
+        GameStartsMessage * gameStarts = nullptr;
+        GameEndsMessage * gameEnds = nullptr;
+        TurnMessage * turn = nullptr;
+        bool shouldQuit = false;
 
         printf("Connecting to netorcai... "); fflush(stdout);
         c.connect();
@@ -28,20 +29,66 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
         c.readLoginAck();
         printf("done\n");
 
-        printf("Waiting for GAME_STARTS... "); fflush(stdout);
-        const GameStartsMessage gameStarts = c.readGameStarts();
-        printf("done\n");
-
-        // Forward GAME_STARTS message to renderer.
-        msg.type = MessageType::GAME_STARTS;
-        gameStartsOnHeap = new GameStartsMessage;
-        *gameStartsOnHeap = gameStarts;
-        msg.data = (void*) gameStartsOnHeap;
-        to_renderer->push(msg);
-
-        // TODO: make this robust, messages can be lost.
-        for (int i = 1; i < gameStarts.nbTurnsMax; i++)
+        while (!shouldQuit)
         {
+            std::string msgStr;
+            if (c.recvStringNonBlocking(msgStr, 50.0))
+            {
+                // A message has been received.
+                json msgJson = json::parse(msgStr);
+                if (msgJson["message_type"] == "TURN")
+                {
+                    turn = new TurnMessage;
+                    *turn = parseTurnMessage(msgJson);
+
+                    printf("Received TURN %d\n", turn->turnNumber); fflush(stdout);
+
+                    // Only forward TURN if the queue is empty.
+                    // This avoids flooding the renderer if it is slower than the network.
+                    if (to_renderer->empty())
+                    {
+                        msg.type = MessageType::TURN;
+                        msg.data = (void*) turn;
+                        to_renderer->push(msg);
+                    }
+                    else
+                        delete turn;
+
+                    // Send TURN_ACK to netorcai, so future turns can be received.
+                    c.sendTurnAck(turn->turnNumber, json::parse(R"([])"));
+                }
+                else if (msgJson["message_type"] == "KICK")
+                {
+                    msg.type = MessageType::ERROR;
+                    asprintf((char**)&msg.data, "%s",
+                        ((std::string)msgJson["kick_reason"]).c_str());
+                    printf("Kicked from netorcai. Reason: %s", msg.data);
+                    to_renderer->push(msg);
+                    shouldQuit = true;
+                }
+                if (msgJson["message_type"] == "GAME_STARTS")
+                {
+                    printf("Received GAME_STARTS\n"); fflush(stdout);
+                    gameStarts = new GameStartsMessage;
+                    *gameStarts = parseGameStartsMessage(msgJson);
+
+                    msg.type = MessageType::GAME_STARTS;
+                    msg.data = (void*) gameStarts;
+                    to_renderer->push(msg);
+                }
+                else if (msgJson["message_type"] == "GAME_ENDS")
+                {
+                    printf("Received GAME_ENDS\n"); fflush(stdout);
+                    gameEnds = new GameEndsMessage;
+                    *gameEnds = parseGameEndsMessage(msgJson);
+
+                    msg.type = MessageType::GAME_ENDS;
+                    msg.data = (void*) gameEnds;
+                    to_renderer->push(msg);
+                    shouldQuit = true;
+                }
+            }
+
             // Look whether termination has been requested.
             if (!from_renderer->empty())
             {
@@ -50,37 +97,10 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
 
                 if (msg.type == MessageType::TERMINATE)
                 {
-                    c.close();
-                    return;
+                    shouldQuit = true;
                 }
             }
-
-            printf("Waiting for TURN... "); fflush(stdout);
-            const TurnMessage turn = c.readTurn();
-            c.sendTurnAck(turn.turnNumber, json::parse(R"([])"));
-            printf("done\n");
-
-            if (to_renderer->empty())
-            {
-                // Forward TURN to renderer.
-                msg.type = MessageType::TURN;
-                turnOnHeap = new TurnMessage;
-                *turnOnHeap = turn;
-                msg.data = (void*) turnOnHeap;
-                to_renderer->push(msg);
-            }
         }
-
-        printf("Waiting for GAME_ENDS... "); fflush(stdout);
-        const GameEndsMessage gameEnds = c.readGameEnds();
-        printf("done\n");
-
-        // Forward GAME_ENDS to renderer.
-        msg.type = MessageType::GAME_ENDS;
-        gameEndsOnHeap = new GameEndsMessage;
-        *gameEndsOnHeap = gameEnds;
-        msg.data = (void*) gameEndsOnHeap;
-        to_renderer->push(msg);
     }
     catch (const netorcai::Error & e)
     {
