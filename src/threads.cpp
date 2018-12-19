@@ -149,7 +149,7 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             if (msg.type == MessageType::GAME_STARTS)
             {
                 auto gameStarts = (GameStartsMessage *) msg.data;
-                parseInitialGameState(gameStarts->initialGameState, cells, characters, bombs);
+                parseGameState(gameStarts->initialGameState, cells, characters, bombs, score, cellCount);
                 renderer.onGameInit(cells, characters, bombs);
                 delete gameStarts;
                 initialized = true;

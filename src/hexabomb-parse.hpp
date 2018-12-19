@@ -38,6 +38,7 @@ struct Character
     Coordinates coord; //!< Current coordinates.
     int color; //!< Color. Immutable.
     bool isAlive; //!< Whether the character is currently alive.
+    int reviveDelay; //!< Revive delay. -1 for alive characters. Decreases by 1 each turn for dead characters. Dead characters can be revived when reviveDelay=0.
 };
 
 // Bomb information.
@@ -55,11 +56,6 @@ struct Cell
     Coordinates coord; //!< The cell coordinates. Immutable.
     int color; //!< The cell color. Mutable.
 };
-
-void parseInitialGameState(const netorcai::json & initialGameState,
-    std::unordered_map<Coordinates, Cell> & cells,
-    std::vector<Character> & characters,
-    std::vector<Bomb> & bombs);
 
 void parseGameState(const netorcai::json & gameState,
     std::unordered_map<Coordinates, Cell> & cells,

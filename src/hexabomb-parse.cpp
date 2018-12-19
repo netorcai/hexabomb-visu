@@ -27,6 +27,7 @@ static void parseCharacters(const netorcai::json & jsonCharacters, std::vector<C
         c.coord = coord;
         c.color = jsonCharacter["color"];
         c.isAlive = jsonCharacter["alive"];
+        c.reviveDelay = jsonCharacter["revive_delay"];
 
         characters.push_back(c);
     }
@@ -60,36 +61,6 @@ static void parsePlayerIntMap(const netorcai::json & jsonObject, std::map<int, i
         const int player_id = std::stoi(it.key());
         m[player_id] = it.value();
     }
-}
-
-/**
- * @brief Parse a netorcai initial game state for the hexabomb game
- * @param[in] gameState The game state to parse (json object)
- * @param[out] cells The board cells.
- * @param[out] characters The characters on the board.
- * @param[out] bombs The bombs on the board.
- */
-void parseInitialGameState(const netorcai::json & initialGameState,
-    std::unordered_map<Coordinates, Cell> & cells,
-    std::vector<Character> & characters,
-    std::vector<Bomb> & bombs)
-{
-    // Parse cells
-    for (const auto & jsonCell : initialGameState["cells"])
-    {
-        Coordinates coord;
-        coord.q = jsonCell["q"];
-        coord.r = jsonCell["r"];
-
-        Cell c;
-        c.coord = coord;
-        c.color = jsonCell["color"];
-
-        cells[coord] = c;
-    }
-
-    parseCharacters(initialGameState["characters"], characters);
-    parseBombs(initialGameState["bombs"], bombs);
 }
 
 /**
