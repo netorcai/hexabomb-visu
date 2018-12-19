@@ -12,6 +12,17 @@ bool operator<(const Coordinates & c1, const Coordinates & c2)
     return c1.q < c2.q;
 }
 
+static void parseCells(const netorcai::json & jsonCells, std::unordered_map<Coordinates, Cell> & cells)
+{
+    for (const auto & jsonCell : jsonCells)
+    {
+        Coordinates coord;
+        coord.q = jsonCell["q"];
+        coord.r = jsonCell["r"];
+        cells[coord].color = jsonCell["color"];
+    }
+}
+
 static void parseCharacters(const netorcai::json & jsonCharacters, std::vector<Character> & characters)
 {
     characters.clear();
@@ -79,17 +90,7 @@ void parseGameState(const netorcai::json & gameState,
     std::map<int, int> & score,
     std::map<int, int> & cellCount)
 {
-    // Parse cells
-    for (const auto & jsonCell : gameState["cells"])
-    {
-        Coordinates coord;
-        coord.q = jsonCell["q"];
-        coord.r = jsonCell["r"];
-
-        // Update the cell color. This is the only information we have about cells each turn.
-        cells[coord].color = jsonCell["color"];
-    }
-
+    parseCells(gameState["cells"], cells);
     parseCharacters(gameState["characters"], characters);
     parseBombs(gameState["bombs"], bombs);
     parsePlayerIntMap(gameState["score"], score);
