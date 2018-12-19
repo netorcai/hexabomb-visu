@@ -13,8 +13,7 @@ int main()
     renderer_thread_function(&to_renderer, &to_network);
 
     network_thread.join();
-
-    // TODO: flush potential messages from queues
+    flush_queues(&to_network, &to_renderer);
 
     return 0;
 }

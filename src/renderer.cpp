@@ -22,7 +22,16 @@ HexabombRenderer::HexabombRenderer()
 
 HexabombRenderer::~HexabombRenderer()
 {
+    for (const auto & [coord, sprite] : _cellSprites)
+        delete sprite;
 
+    // Draw characters
+    for (const auto & [coord, sprite] : _characterSprites)
+        delete sprite;
+
+    // Draw bombs
+    for (const auto & sprite : _bombSprites)
+        delete sprite;
 }
 
 void HexabombRenderer::onGameInit(

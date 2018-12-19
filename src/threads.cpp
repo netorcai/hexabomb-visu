@@ -161,11 +161,20 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
                 renderer.onTurn(cells, characters, bombs, score, cellCount);
                 delete turn;
             }
+            else if (msg.type == MessageType::GAME_ENDS)
+            {
+                auto gameEnds = (GameEndsMessage *) msg.data;
+                parseGameState(gameEnds->gameState, cells, characters, bombs, score, cellCount);
+                // TODO: print something on the screen.
+                renderer.onTurn(cells, characters, bombs, score, cellCount);
+                delete gameEnds;
+            }
             else if (msg.type == MessageType::ERROR)
             {
                 if (!initialized)
                     window.close();
                 // TODO: print something on screen otherwise
+                free((char *) msg.data);
             }
         }
 
@@ -177,4 +186,23 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
     Message msg;
     msg.type = MessageType::TERMINATE;
     to_network->push(msg);
+}
+
+void flush_queues(boost::lockfree::queue<Message> * to_network,
+    boost::lockfree::queue<Message> * to_renderer)
+{
+    Message msg;
+    while (to_network->pop(msg));
+
+    while (to_renderer->pop(msg))
+    {
+        if (msg.type == MessageType::GAME_STARTS)
+            delete (GameStartsMessage*) msg.data;
+        else if (msg.type == MessageType::TURN)
+            delete (TurnMessage*) msg.data;
+        else if (msg.type == MessageType::GAME_ENDS)
+            delete (GameEndsMessage*) msg.data;
+        else if (msg.type == MessageType::ERROR)
+            free((char*) msg.data);
+    }
 }

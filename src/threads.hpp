@@ -25,3 +25,6 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
 
 void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
     boost::lockfree::queue<Message> * to_network);
+
+void flush_queues(boost::lockfree::queue<Message> * to_network,
+    boost::lockfree::queue<Message> * to_renderer);
