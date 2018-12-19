@@ -42,8 +42,11 @@ private:
     std::vector<sf::Sprite*> _bombSprites;
 
     std::vector<sf::Color> _colors;
-    const float _textureSize = 256.0f;
-    const sf::Color _backgroundColor = sf::Color(64, 64, 64);
     sf::FloatRect _boardBoundingBox;
     sf::View _boardView;
+
+    const float _textureSize = 256.0f;
+    const sf::Color _backgroundColor = sf::Color(64, 64, 64);
+    const sf::Vector2f _characterScale = sf::Vector2f(0.7f, 0.7f);
+    const sf::Vector2f _bombScale = sf::Vector2f(0.5f, 0.5f);
 };

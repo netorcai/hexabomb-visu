@@ -18,6 +18,10 @@ HexabombRenderer::HexabombRenderer()
     _bombTexture.loadFromFile(searchImageAbsoluteFilename("bomb.png"));
     _characterTexture.loadFromFile(searchImageAbsoluteFilename("char.png"));
     _emptyTexture.loadFromFile(searchImageAbsoluteFilename("empty.png"));
+
+    _bombTexture.setSmooth(true);
+    _characterTexture.setSmooth(true);
+    _emptyTexture.setSmooth(true);
 }
 
 HexabombRenderer::~HexabombRenderer()
@@ -71,6 +75,8 @@ void HexabombRenderer::onGameInit(
         sprite->setTexture(_characterTexture);
         sprite->setPosition(axialToCartesian(character.coord));
         sprite->setOrigin(sf::Vector2f(_textureSize/2.0, _textureSize/2.0));
+        sprite->setScale(_characterScale);
+        sprite->setOrigin(sf::Vector2f((2.0/3.0)*_textureSize, _textureSize/2.0));
 
         _characterSprites[character.id] = sprite;
     }
@@ -81,6 +87,7 @@ void HexabombRenderer::onGameInit(
         sprite->setTexture(_bombTexture);
         sprite->setPosition(axialToCartesian(bomb.coord));
         sprite->setOrigin(sf::Vector2f(_textureSize/2.0, _textureSize/2.0));
+        sprite->setScale(_bombScale);
 
         _bombSprites.push_back(sprite);
     }
@@ -111,6 +118,7 @@ void HexabombRenderer::onTurn(
     {
         auto * sprite = _characterSprites[character.id];
         sprite->setPosition(axialToCartesian(character.coord));
+        // TODO: mark alive/dead characters
     }
 
     for (auto * sprite : _bombSprites)
@@ -123,6 +131,7 @@ void HexabombRenderer::onTurn(
         sprite->setTexture(_bombTexture);
         sprite->setPosition(axialToCartesian(bomb.coord));
         sprite->setOrigin(sf::Vector2f(_textureSize/2.0, _textureSize/2.0));
+        sprite->setScale(_bombScale);
 
         _bombSprites.push_back(sprite);
     }
@@ -143,6 +152,7 @@ void HexabombRenderer::render(sf::RenderWindow & window)
     }
 
     // Draw characters
+    // TODO: only draw alive ones
     for (const auto & [coord, sprite] : _characterSprites)
     {
         window.draw(*sprite);
