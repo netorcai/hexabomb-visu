@@ -62,7 +62,7 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
                     msg.type = MessageType::ERROR;
                     asprintf((char**)&msg.data, "%s",
                         ((std::string)msgJson["kick_reason"]).c_str());
-                    printf("Kicked from netorcai. Reason: %s", msg.data);
+                    printf("Kicked from netorcai. Reason: %s", (char*) msg.data);
                     to_renderer->push(msg);
                     shouldQuit = true;
                 }

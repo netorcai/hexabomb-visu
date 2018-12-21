@@ -228,6 +228,6 @@ void HexabombRenderer::generatePlayerColors(int nbColors)
     _colors.clear();
     _colors.push_back(sf::Color::White); // Neutral
 
-    while (_colors.size() < nbColors + 1)
+    while ((int)_colors.size() < nbColors + 1)
         _colors.insert(_colors.end(), viridis.begin(), viridis.end());
 }
