@@ -82,6 +82,7 @@ void HexabombRenderer::onGameInit(
         sprite->setOrigin(sf::Vector2f((2.0/3.0)*_textureSize, _textureSize/2.0));
 
         _characterSprites[character.id] = sprite;
+        _aliveCharacters.push_back(sprite);
     }
 
     for (const auto & bomb : bombs)
@@ -117,11 +118,14 @@ void HexabombRenderer::onTurn(
         sprite->setColor(_colors[cell.color]);
     }
 
+    _aliveCharacters.resize(0);
     for (const auto & character : characters)
     {
         auto * sprite = _characterSprites[character.id];
         sprite->setPosition(axialToCartesian(character.coord));
-        // TODO: mark alive/dead characters
+
+        if (character.isAlive)
+            _aliveCharacters.push_back(sprite);
     }
 
     for (auto * sprite : _bombSprites)
@@ -155,8 +159,7 @@ void HexabombRenderer::render(sf::RenderWindow & window)
     }
 
     // Draw characters
-    // TODO: only draw alive ones
-    for (const auto & [coord, sprite] : _characterSprites)
+    for (const auto & sprite : _aliveCharacters)
     {
         window.draw(*sprite);
     }

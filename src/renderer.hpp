@@ -39,6 +39,7 @@ private:
 
     std::unordered_map<Coordinates, sf::Sprite*> _cellSprites;
     std::unordered_map<int, sf::Sprite*> _characterSprites;
+    std::vector<sf::Sprite*> _aliveCharacters;
     std::vector<sf::Sprite*> _bombSprites;
 
     std::vector<sf::Color> _colors;
