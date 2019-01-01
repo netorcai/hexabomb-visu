@@ -9,7 +9,8 @@
 using namespace netorcai;
 
 void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
-    boost::lockfree::queue<Message> * to_renderer)
+    boost::lockfree::queue<Message> * to_renderer,
+    const std::string & hostname, uint16_t port)
 {
     try
     {
@@ -20,8 +21,8 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
         TurnMessage * turn = nullptr;
         bool shouldQuit = false;
 
-        printf("Connecting to netorcai... "); fflush(stdout);
-        c.connect();
+        printf("Connecting to netorcai (%s:%d)... ", hostname.c_str(), port); fflush(stdout);
+        c.connect(hostname, port);
         printf("done\n");
 
         printf("Logging in as a visualization... "); fflush(stdout);

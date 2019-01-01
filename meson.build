@@ -5,7 +5,8 @@ project('hexabomb-visu', 'cpp',
 
 netorcai_client_cpp_dep = dependency('netorcai-client-cpp', required: true)
 sfml_graphics_dep = dependency('sfml-graphics', required: true)
-boost_dep = dependency('boost', modules: ['filesystem', 'system'], required: true)
+boost_dep = dependency('boost',
+    modules: ['filesystem', 'system', 'program_options'], required: true)
 threads_dep = dependency('threads', required: true)
 
 src = [

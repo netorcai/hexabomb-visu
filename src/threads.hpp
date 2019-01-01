@@ -21,7 +21,8 @@ struct Message
 };
 
 void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
-    boost::lockfree::queue<Message> * to_renderer);
+    boost::lockfree::queue<Message> * to_renderer,
+    const std::string & hostname, uint16_t port);
 
 void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
     boost::lockfree::queue<Message> * to_network);
