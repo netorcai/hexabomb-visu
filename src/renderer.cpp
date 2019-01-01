@@ -200,34 +200,26 @@ void HexabombRenderer::updateView(int newWidth, int newHeight)
 
 void HexabombRenderer::generatePlayerColors(int nbColors)
 {
-    // Viridis color palette. Generated in R.
+    // Viridis color palette. Generated in R: viridis_pal(begin=0.2, direction=-1)(6)
     std::vector<sf::Color> viridis = {
-        sf::Color(0x440154ff),
-        sf::Color(0x481a6cff),
-        sf::Color(0x472f7dff),
-        sf::Color(0x414487ff),
-        sf::Color(0x39568cff),
-        sf::Color(0x31688eff),
-        sf::Color(0x2a788eff),
-        sf::Color(0x23888eff),
-        sf::Color(0x1f988bff),
-        sf::Color(0x22a884ff),
-        sf::Color(0x35b779ff),
-        sf::Color(0x54c568ff),
-        sf::Color(0x7ad151ff),
-        sf::Color(0xa5db36ff),
-        sf::Color(0xd2e21bff),
-        sf::Color(0xfde725ff)
+        sf::Color(0xfde725ff),
+        sf::Color(0x93d741ff),
+        sf::Color(0x3aba76ff),
+        sf::Color(0x1f958bff),
+        sf::Color(0x2e6f8eff),
+        sf::Color(0x414487ff)
     };
 
-    // Shuffle the palette.
-    auto rng = std::default_random_engine{};
-    std::shuffle(std::begin(viridis), std::end(viridis), rng);
+    // This is to maximize color distance between players if the number of players is small.
+    int traversal_order[6] = {0, 5, 2, 4, 1, 3};
 
     // Generate the palette.
     _colors.clear();
     _colors.push_back(sf::Color::White); // Neutral
 
     while ((int)_colors.size() < nbColors + 1)
-        _colors.insert(_colors.end(), viridis.begin(), viridis.end());
+    {
+        for (int i = 0; i < 6; i++)
+            _colors.push_back(viridis[traversal_order[i]]);
+    }
 }
