@@ -11,7 +11,7 @@ static sf::Vector2f axialToCartesian(Coordinates axial)
 
     sf::Vector2f res;
     res.x = base_length * (sqrt(3.0) * axial.q + sqrt(3.0) / 2.0 * axial.r);
-    res.y = base_length * (                          -3.0  / 2.0 * axial.r);
+    res.y = base_length * (                           3.0  / 2.0 * axial.r);
 
     return res;
 }
