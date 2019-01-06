@@ -5,20 +5,26 @@ SFML Visualization client for [hexabomb].
 Getting dependencies
 --------------------
 
-hexabomb-visu uses [netorcai-client-cpp], [SFML] and [Boost].
-Make sure the first two are installed in your system and found from [pkg-config].
-Boost should be installed in your system.
-
-**Important note**: Using graphical Nix packages on non-NixOS machines can be
-[very tricky](https://github.com/NixOS/nixpkgs/issues/9415),
-installing [SFML] from your distribution package manager is therefore recommended.
+hexabomb-visu uses [Boost], [SFML] and [netorcai-client-cpp].
+The first two should be installable by your distribution's package manager.
+Once they are installed, the following script installs [netorcai-client-cpp]
+and its remaining dependency.
 
 ``` bash
-# This should return no error.
-pkg-config --cflags --libs netorcai-client-cpp
+INSTALL_DIRECTORY=/usr
+# IMPORTANT NOTE: If you change the install directory,
+# make sure ${INSTALL_DIRECTORY}/lib/pkgconfig is in your pkg-config path
+# (environment variable $PKG_CONFIG_PATH)
 
-# Same here.
-pkg-config --cflags --libs sfml-graphics
+# Get and install nlohmann_json-3.5.0
+git clone https://github.com/nlohmann/json.git -b v3.5.0 --single-branch --depth 1
+(cd json && meson build --prefix=${INSTALL_DIRECTORY})
+(cd json/build && ninja install)
+
+# Get and install netorcai-client-cpp
+git clone https://github.com/netorcai/netorcai-client-cpp.git
+(cd netorcai-client-cpp && meson build --prefix=${INSTALL_DIRECTORY})
+(cd netorcai-client-cpp/build && ninja install)
 ```
 
 Build instructions
