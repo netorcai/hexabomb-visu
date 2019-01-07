@@ -26,9 +26,11 @@ visu = executable('hexabomb-visu', src,
     install: true, install_dir: 'bin'
 )
 
-install_data([
+share_files = [
     'assets/img/bomb.png',
     'assets/img/char.png',
-    'assets/img/empty.png'],
-    install_dir : 'share/hexabomb-visu'
-)
+    'assets/img/empty.png',
+    'assets/fonts/DejaVuSansMono.ttf'
+]
+
+install_data(share_files, install_dir : 'share/hexabomb-visu')

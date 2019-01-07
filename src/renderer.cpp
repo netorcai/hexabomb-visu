@@ -25,6 +25,8 @@ HexabombRenderer::HexabombRenderer()
     _bombTexture.setSmooth(true);
     _characterTexture.setSmooth(true);
     _emptyTexture.setSmooth(true);
+
+    _monospaceFont.loadFromFile(searchFontAbsoluteFilename("DejaVuSansMono.ttf"));
 }
 
 HexabombRenderer::~HexabombRenderer()
@@ -44,7 +46,10 @@ HexabombRenderer::~HexabombRenderer()
 void HexabombRenderer::onGameInit(
     const std::unordered_map<Coordinates, Cell> & cells,
     const std::vector<Character> & characters,
-    const std::vector<Bomb> & bombs)
+    const std::vector<Bomb> & bombs,
+    const std::map<int, int> & score,
+    const std::map<int, int> & cellCount,
+    const std::vector<netorcai::PlayerInfo> & playersInfo)
 {
     float xmin = std::numeric_limits<float>::max();
     float ymin = std::numeric_limits<float>::max();
@@ -103,6 +108,11 @@ void HexabombRenderer::onGameInit(
         ymax - ymin + _textureSize
     );
     _boardView.reset(_boardBoundingBox);
+
+    // Initialize misc. info
+    updatePlayerInfo(playersInfo);
+    _score = score;
+    _cellCount = cellCount;
 }
 
 void HexabombRenderer::onTurn(
@@ -110,8 +120,12 @@ void HexabombRenderer::onTurn(
     const std::vector<Character> & characters,
     const std::vector<Bomb> & bombs,
     const std::map<int, int> & score,
-    const std::map<int, int> & cellCount)
+    const std::map<int, int> & cellCount,
+    const std::vector<netorcai::PlayerInfo> & playersInfo)
 {
+    _pInfoTexts.clear();
+    _pInfoRectShapes.clear();
+
     for (const auto & [coord, cell] : cells)
     {
         auto * sprite = _cellSprites[coord];
@@ -142,6 +156,75 @@ void HexabombRenderer::onTurn(
 
         _bombSprites.push_back(sprite);
     }
+
+    // Update misc. info
+    updatePlayerInfo(playersInfo);
+    _score = score;
+    _cellCount = cellCount;
+}
+
+void HexabombRenderer::updatePlayerInfo(const std::vector<netorcai::PlayerInfo> & playersInfo)
+{
+    // Update raw data
+    if (playersInfo.empty())
+    {
+        // Probably coming from a GAME_ENDS.
+        for (auto & info : _playersInfo)
+        {
+            info.isConnected = true;
+            info.remoteAddress = "";
+        }
+    }
+    else
+        _playersInfo = playersInfo;
+
+    // Update rendering data
+    const float hPlayers = 100.f;
+    const float hLines = 20.f;
+    const float rectWidth = 280.f;
+    const float rectX = 2.f;
+    const float textX = 4.f;
+
+    sf::Text text;
+    text.setFont(_monospaceFont);
+    text.setCharacterSize(20);
+    text.setFillColor(sf::Color::Black);
+
+    for (unsigned int i = 0; i < _playersInfo.size(); i++)
+    {
+        const netorcai::PlayerInfo & info = _playersInfo[i];
+        int j = -1;
+
+        sf::RectangleShape rect(sf::Vector2f(rectWidth, hPlayers));
+        rect.setFillColor(_colors[i+1]);
+        rect.setOutlineThickness(2.f);
+        rect.setOutlineColor(sf::Color::Black);
+        rect.setPosition(rectX, hPlayers*i);
+        _pInfoRectShapes.push_back(rect);
+
+        j++;
+        text.setPosition(textX, hPlayers*i + hLines*j);
+        text.setString(info.nickname + " (" + std::to_string(info.playerID) + ")");
+        _pInfoTexts.push_back(text);
+
+        j++;
+        text.setPosition(textX, hPlayers*i + hLines*j);
+        text.setString("  score: " + std::to_string(_score[i]));
+        _pInfoTexts.push_back(text);
+
+        j++;
+        text.setPosition(textX, hPlayers*i + hLines*j);
+        text.setString("  #cells: " + std::to_string(_cellCount[i]));
+        _pInfoTexts.push_back(text);
+
+        j++;
+        text.setPosition(textX, hPlayers*i + hLines*j);
+        if (info.isConnected)
+            text.setString("  " + info.remoteAddress);
+        else
+            text.setString("  disconnected");
+        _pInfoTexts.push_back(text);
+    }
 }
 
 void HexabombRenderer::render(sf::RenderWindow & window)
@@ -170,12 +253,25 @@ void HexabombRenderer::render(sf::RenderWindow & window)
         window.draw(*sprite);
     }
 
+    // Draw player informations
+    window.setView(_playersInfoView);
+    for (const auto & shape : _pInfoRectShapes)
+    {
+        window.draw(shape);
+    }
+
+    for (const auto & text : _pInfoTexts)
+    {
+        window.draw(text);
+    }
+
     // Finally update the screen
     window.display();
 }
 
 void HexabombRenderer::updateView(int newWidth, int newHeight)
 {
+    // Keep aspect ratio with a resizable window.
     // https://en.sfml-dev.org/forums/index.php?topic=15802.msg113936#msg113936
     float screenWidth = newWidth;
     float screenHeight = newHeight;
@@ -196,6 +292,10 @@ void HexabombRenderer::updateView(int newWidth, int newHeight)
     }
 
     _boardView.setViewport(viewport);
+
+    // Players misc. information
+    _playersInfoView.reset(sf::FloatRect(0.f, 0.f, newWidth, newHeight));
+    _playersInfoView.setViewport(sf::FloatRect(0.8f, 0.f, 1.f, 1.f));
 }
 
 void HexabombRenderer::generatePlayerColors(int nbColors)

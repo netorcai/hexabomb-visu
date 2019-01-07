@@ -15,6 +15,23 @@
 
 namespace fs = boost::filesystem;
 
+static std::string searchAbsoluteFilename(const std::string & filename,
+    const std::vector<fs::path> & searchedPaths)
+{
+    std::vector<std::string> searchedPathsStrings;
+    for (const auto & path : searchedPaths)
+    {
+        searchedPathsStrings.push_back("- " + path.string());
+
+        fs::path searchedFilename = path.string() + filename;
+        if (fs::exists(searchedFilename))
+            return fs::absolute(searchedFilename).string();
+    }
+
+    throw std::runtime_error("Could not find image '" + filename + "'. Searched paths:\n" +
+        boost::algorithm::join(searchedPathsStrings, "\n"));
+}
+
 std::string searchImageAbsoluteFilename(const std::string & filename)
 {
     // Convenient variables
@@ -30,18 +47,25 @@ std::string searchImageAbsoluteFilename(const std::string & filename)
         fs::path(currentDirPath.string() + "/") // Assets are in current directory.
     };
 
-    std::vector<std::string> searchedPathsStrings;
-    for (const auto & path : searchedPaths)
-    {
-        searchedPathsStrings.push_back("- " + path.string());
+    return searchAbsoluteFilename(filename, searchedPaths);
+}
 
-        fs::path searchedFilename = path.string() + filename;
-        if (fs::exists(searchedFilename))
-            return fs::absolute(searchedFilename).string();
-    }
+std::string searchFontAbsoluteFilename(const std::string & filename)
+{
+    // Convenient variables
+    fs::path programPath(programAbsoluteFilename());
+    fs::path programDirPath(programPath.parent_path());
+    fs::path currentDirPath = fs::current_path();
 
-    throw std::runtime_error("Could not find image '" + filename + "'. Searched paths:\n" +
-        boost::algorithm::join(searchedPathsStrings, "\n"));
+    // Predefined search paths
+    std::vector<fs::path> searchedPaths = {
+        fs::path(programDirPath.string() + "/../share/hexabomb-visu/"), // Assets/program in installed hexabomb-visu.
+        fs::path(programDirPath.string() + "/../assets/fonts/"), // Assets in git repo. Program in meson build directory.
+        fs::path(currentDirPath.string() + "/assets/fonts/"), // Run from the git repo root.
+        fs::path(currentDirPath.string() + "/") // Assets are in current directory.
+    };
+
+    return searchAbsoluteFilename(filename, searchedPaths);
 }
 
 std::string programAbsoluteFilename()

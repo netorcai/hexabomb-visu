@@ -151,7 +151,7 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             {
                 auto gameStarts = (GameStartsMessage *) msg.data;
                 parseGameState(gameStarts->initialGameState, cells, characters, bombs, score, cellCount);
-                renderer.onGameInit(cells, characters, bombs);
+                renderer.onGameInit(cells, characters, bombs, score, cellCount, gameStarts->playersInfo);
                 delete gameStarts;
                 initialized = true;
             }
@@ -159,7 +159,7 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             {
                 auto turn = (TurnMessage *) msg.data;
                 parseGameState(turn->gameState, cells, characters, bombs, score, cellCount);
-                renderer.onTurn(cells, characters, bombs, score, cellCount);
+                renderer.onTurn(cells, characters, bombs, score, cellCount, turn->playersInfo);
                 delete turn;
             }
             else if (msg.type == MessageType::GAME_ENDS)
