@@ -126,6 +126,7 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
     std::vector<Character> characters;
     std::vector<Bomb> bombs;
     std::map<int, int> score, cellCount;
+    int nbTurnsMax = -1;
 
     bool initialized = false;
 
@@ -151,7 +152,8 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             {
                 auto gameStarts = (GameStartsMessage *) msg.data;
                 parseGameState(gameStarts->initialGameState, cells, characters, bombs, score, cellCount);
-                renderer.onGameInit(cells, characters, bombs, score, cellCount, gameStarts->playersInfo);
+                nbTurnsMax = gameStarts->nbTurnsMax;
+                renderer.onGameInit(cells, characters, bombs, score, cellCount, nbTurnsMax, gameStarts->playersInfo);
                 delete gameStarts;
                 initialized = true;
             }
@@ -159,7 +161,7 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             {
                 auto turn = (TurnMessage *) msg.data;
                 parseGameState(turn->gameState, cells, characters, bombs, score, cellCount);
-                renderer.onTurn(cells, characters, bombs, score, cellCount, turn->playersInfo);
+                renderer.onTurn(cells, characters, bombs, score, cellCount, turn->turnNumber, nbTurnsMax, turn->playersInfo);
                 delete turn;
             }
             else if (msg.type == MessageType::GAME_ENDS)
@@ -167,7 +169,7 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
                 auto gameEnds = (GameEndsMessage *) msg.data;
                 parseGameState(gameEnds->gameState, cells, characters, bombs, score, cellCount);
                 // TODO: print something on the screen.
-                renderer.onTurn(cells, characters, bombs, score, cellCount);
+                renderer.onTurn(cells, characters, bombs, score, cellCount, nbTurnsMax, nbTurnsMax);
                 delete gameEnds;
             }
             else if (msg.type == MessageType::ERROR)

@@ -20,6 +20,7 @@ public:
         const std::vector<Bomb> & bombs,
         const std::map<int, int> & score,
         const std::map<int, int> & cellCount,
+        int lastTurnNumber,
         const std::vector<netorcai::PlayerInfo> & playersInfo);
 
     void onTurn(
@@ -28,6 +29,8 @@ public:
         const std::vector<Bomb> & bombs,
         const std::map<int, int> & score,
         const std::map<int, int> & cellCount,
+        int currentTurnNumber,
+        int lastTurnNumber,
         const std::vector<netorcai::PlayerInfo> & playersInfo = {});
 
     void render(sf::RenderWindow & window);
@@ -35,7 +38,10 @@ public:
 
 private:
     void generatePlayerColors(int nbColors);
-    void updatePlayerInfo(const std::vector<netorcai::PlayerInfo> & playersInfo);
+    void updatePlayerInfo(
+        int currentTurnNumber,
+        int lastTurnNumber,
+        const std::vector<netorcai::PlayerInfo> & playersInfo);
     void updateCellCount(const std::map<int, int> & cellCount);
 
 private:
@@ -68,6 +74,8 @@ private:
     const sf::Color _backgroundColor = sf::Color(0xa0a0a0ff);
     const sf::Vector2f _characterScale = sf::Vector2f(0.7f, 0.7f);
     const sf::Vector2f _bombScale = sf::Vector2f(0.5f, 0.5f);
+    const float _piRectWidth = 280.f;
     const float _ccdWidth = 100.f;
     const float _ccdHeight = 10.f;
+    const float _ccdHeightRatioInScreen = 0.02f;
 };

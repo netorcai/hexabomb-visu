@@ -49,6 +49,7 @@ void HexabombRenderer::onGameInit(
     const std::vector<Bomb> & bombs,
     const std::map<int, int> & score,
     const std::map<int, int> & cellCount,
+    int lastTurnNumber,
     const std::vector<netorcai::PlayerInfo> & playersInfo)
 {
     float xmin = std::numeric_limits<float>::max();
@@ -114,7 +115,7 @@ void HexabombRenderer::onGameInit(
     _boardView.reset(_boardBoundingBox);
 
     // Initialize misc. info
-    updatePlayerInfo(playersInfo);
+    updatePlayerInfo(1, lastTurnNumber, playersInfo);
     _score = score;
     updateCellCount(cellCount);
 }
@@ -125,6 +126,8 @@ void HexabombRenderer::onTurn(
     const std::vector<Bomb> & bombs,
     const std::map<int, int> & score,
     const std::map<int, int> & cellCount,
+    int currentTurnNumber,
+    int lastTurnNumber,
     const std::vector<netorcai::PlayerInfo> & playersInfo)
 {
     _pInfoTexts.clear();
@@ -167,12 +170,14 @@ void HexabombRenderer::onTurn(
     }
 
     // Update misc. info
-    updatePlayerInfo(playersInfo);
+    updatePlayerInfo(currentTurnNumber, lastTurnNumber, playersInfo);
     _score = score;
     updateCellCount(cellCount);
 }
 
-void HexabombRenderer::updatePlayerInfo(const std::vector<netorcai::PlayerInfo> & playersInfo)
+void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
+    int lastTurnNumber,
+    const std::vector<netorcai::PlayerInfo> & playersInfo)
 {
     // Update raw data
     if (playersInfo.empty())
@@ -180,8 +185,22 @@ void HexabombRenderer::updatePlayerInfo(const std::vector<netorcai::PlayerInfo> 
         // Probably coming from a GAME_ENDS.
         for (auto & info : _playersInfo)
         {
-            info.isConnected = true;
-            info.remoteAddress = "";
+            // Empty the address of non-disconnected players.
+            if (info.remoteAddress.find("disconnected") != std::string::npos)
+                info.remoteAddress = "";
+        }
+    }
+    else if (playersInfo.size() == _playersInfo.size())
+    {
+        // Updating: Not the first turn nor the last.
+        // Change address of disconnected players.
+        for (unsigned int i = 0; i < _playersInfo.size(); i++)
+        {
+            if (_playersInfo[i].isConnected && !playersInfo[i].isConnected)
+            {
+                _playersInfo[i].isConnected = false;
+                _playersInfo[i].remoteAddress = "conn. lost (" + std::to_string(currentTurnNumber) + ")";
+            }
         }
     }
     else
@@ -190,9 +209,9 @@ void HexabombRenderer::updatePlayerInfo(const std::vector<netorcai::PlayerInfo> 
     // Update rendering data
     const float hPlayers = 100.f;
     const float hLines = 20.f;
-    const float rectWidth = 280.f;
     const float rectX = 2.f;
     const float textX = 4.f;
+    const float barThickness = 1.f;
 
     sf::Text text;
     text.setFont(_monospaceFont);
@@ -204,7 +223,7 @@ void HexabombRenderer::updatePlayerInfo(const std::vector<netorcai::PlayerInfo> 
         const netorcai::PlayerInfo & info = _playersInfo[i];
         int j = -1;
 
-        sf::RectangleShape rect(sf::Vector2f(rectWidth, hPlayers));
+        sf::RectangleShape rect(sf::Vector2f(_piRectWidth, hPlayers));
         rect.setFillColor(_colors[i+1]);
         rect.setOutlineThickness(2.f);
         rect.setOutlineColor(sf::Color::Black);
@@ -228,11 +247,28 @@ void HexabombRenderer::updatePlayerInfo(const std::vector<netorcai::PlayerInfo> 
 
         j++;
         text.setPosition(textX, hPlayers*i + hLines*j);
-        if (info.isConnected)
-            text.setString("  " + info.remoteAddress);
-        else
-            text.setString("  disconnected");
+        text.setString("  " + info.remoteAddress);
         _pInfoTexts.push_back(text);
+
+        if (!info.isConnected)
+        {
+            const float diagonalLength = sqrt(_piRectWidth*_piRectWidth+hPlayers*hPlayers);
+            rect.setFillColor(sf::Color::Black);
+            rect.setOutlineThickness(1.f);
+
+            rect.setSize(sf::Vector2f(diagonalLength, barThickness));
+            rect.setPosition(rectX, hPlayers*i);
+            rect.setOrigin(diagonalLength/2, barThickness/2);
+            rect.setRotation(acos(_piRectWidth/diagonalLength) * 180.f/M_PI);
+            rect.setOrigin(0.f, 0.f);
+            _pInfoRectShapes.push_back(rect);
+
+            rect.setPosition(rectX, hPlayers*(i+1));
+            rect.setOrigin(diagonalLength/2, barThickness/2);
+            rect.setRotation(-acos(_piRectWidth/diagonalLength) * 180.f/M_PI);
+            rect.setOrigin(0.f, 0.f);
+            _pInfoRectShapes.push_back(rect);
+        }
     }
 }
 
@@ -318,8 +354,8 @@ void HexabombRenderer::updateView(int newWidth, int newHeight)
 {
     // Keep aspect ratio with a resizable window.
     // https://en.sfml-dev.org/forums/index.php?topic=15802.msg113936#msg113936
-    float screenWidth = newWidth;
-    float screenHeight = newHeight;
+    float screenWidth = newWidth - _piRectWidth;
+    float screenHeight = newHeight * (1-_ccdHeightRatioInScreen);
 
     sf::FloatRect viewport;
     viewport.width = 1.f;
@@ -336,15 +372,17 @@ void HexabombRenderer::updateView(int newWidth, int newHeight)
         viewport.top = (1.f - viewport.height) / 2.f;
     }
 
+    viewport.width *= (1-(_piRectWidth/newWidth));
+    viewport.height *= (1-_ccdHeightRatioInScreen);
     _boardView.setViewport(viewport);
 
-    // Players misc. information
+    // Players misc. information.
     _playersInfoView.reset(sf::FloatRect(0.f, 0.f, newWidth, newHeight));
-    _playersInfoView.setViewport(sf::FloatRect(0.8f, 0.f, 1.f, 1.f));
+    _playersInfoView.setViewport(sf::FloatRect(1-(_piRectWidth/newWidth), 0.f, 1.f, 1.f));
 
     // Cell count distribution
     _cellCountDistributionView.reset(sf::FloatRect(0.f, 0.f, _ccdWidth, _ccdHeight));
-    _cellCountDistributionView.setViewport(sf::FloatRect(0.f, 0.98f, 1.f, 1.f));
+    _cellCountDistributionView.setViewport(sf::FloatRect(0.f, 1-_ccdHeightRatioInScreen, 1.f, 1.f));
 }
 
 void HexabombRenderer::generatePlayerColors(int nbColors)
