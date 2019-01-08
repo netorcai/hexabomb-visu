@@ -58,6 +58,7 @@ void HexabombRenderer::onGameInit(
 
     generatePlayerColors(2);
 
+    _nbNeutralCells = 0;
     for (const auto & [coord, cell] : cells)
     {
         auto * sprite = new sf::Sprite;
@@ -69,6 +70,9 @@ void HexabombRenderer::onGameInit(
         sprite->setColor(_colors[cell.color]);
 
         _cellSprites[coord] = sprite;
+
+        if (cell.color == 0)
+            _nbNeutralCells++;
 
         // Update bounding box
         if (cartesian.x < xmin) xmin = cartesian.x;
@@ -112,7 +116,7 @@ void HexabombRenderer::onGameInit(
     // Initialize misc. info
     updatePlayerInfo(playersInfo);
     _score = score;
-    _cellCount = cellCount;
+    updateCellCount(cellCount);
 }
 
 void HexabombRenderer::onTurn(
@@ -125,11 +129,16 @@ void HexabombRenderer::onTurn(
 {
     _pInfoTexts.clear();
     _pInfoRectShapes.clear();
+    _ccdRectShapes.clear();
 
+    _nbNeutralCells = 0;
     for (const auto & [coord, cell] : cells)
     {
         auto * sprite = _cellSprites[coord];
         sprite->setColor(_colors[cell.color]);
+
+        if (cell.color == 0)
+            _nbNeutralCells++;
     }
 
     _aliveCharacters.resize(0);
@@ -160,7 +169,7 @@ void HexabombRenderer::onTurn(
     // Update misc. info
     updatePlayerInfo(playersInfo);
     _score = score;
-    _cellCount = cellCount;
+    updateCellCount(cellCount);
 }
 
 void HexabombRenderer::updatePlayerInfo(const std::vector<netorcai::PlayerInfo> & playersInfo)
@@ -227,6 +236,35 @@ void HexabombRenderer::updatePlayerInfo(const std::vector<netorcai::PlayerInfo> 
     }
 }
 
+void HexabombRenderer::updateCellCount(const std::map<int, int> & cellCount)
+{
+    _cellCount = cellCount;
+
+    const float nbCells = _cellSprites.size();
+
+    sf::RectangleShape rect;
+    float width = _ccdWidth * _nbNeutralCells / nbCells;
+    float offX = 0.f;
+
+    rect.setSize(sf::Vector2f(width, _ccdHeight));
+    rect.setFillColor(_colors[0]);
+    rect.setPosition(offX, 0.f);
+    _ccdRectShapes.push_back(rect);
+
+    for (const auto & it : _cellCount)
+    {
+        const int & playerID = it.first;
+        const int nbPlayerCells = it.second;
+
+        offX += width;
+        width = _ccdWidth * nbPlayerCells / nbCells;
+        rect.setSize(sf::Vector2f(width, _ccdHeight));
+        rect.setFillColor(_colors[playerID + 1]);
+        rect.setPosition(offX, 0.f);
+        _ccdRectShapes.push_back(rect);
+    }
+}
+
 void HexabombRenderer::render(sf::RenderWindow & window)
 {
     // Clear the window
@@ -265,6 +303,13 @@ void HexabombRenderer::render(sf::RenderWindow & window)
         window.draw(text);
     }
 
+    // Draw cell count distribution
+    window.setView(_cellCountDistributionView);
+    for (const auto & shape : _ccdRectShapes)
+    {
+        window.draw(shape);
+    }
+
     // Finally update the screen
     window.display();
 }
@@ -296,6 +341,10 @@ void HexabombRenderer::updateView(int newWidth, int newHeight)
     // Players misc. information
     _playersInfoView.reset(sf::FloatRect(0.f, 0.f, newWidth, newHeight));
     _playersInfoView.setViewport(sf::FloatRect(0.8f, 0.f, 1.f, 1.f));
+
+    // Cell count distribution
+    _cellCountDistributionView.reset(sf::FloatRect(0.f, 0.f, _ccdWidth, _ccdHeight));
+    _cellCountDistributionView.setViewport(sf::FloatRect(0.f, 0.98f, 1.f, 1.f));
 }
 
 void HexabombRenderer::generatePlayerColors(int nbColors)
