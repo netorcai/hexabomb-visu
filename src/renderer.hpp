@@ -33,6 +33,8 @@ public:
         int lastTurnNumber,
         const std::vector<netorcai::PlayerInfo> & playersInfo = {});
 
+    void onStatusChange(const std::string & status);
+
     void render(sf::RenderWindow & window);
     void updateView(int newWidth, int newHeight);
 
@@ -58,11 +60,13 @@ private:
     std::vector<sf::Text> _pInfoTexts;
     std::vector<sf::RectangleShape> _pInfoRectShapes;
     std::vector<sf::RectangleShape> _ccdRectShapes;
+    sf::Text _statusText;
 
     std::vector<netorcai::PlayerInfo> _playersInfo;
     std::map<int, int> _score;
     std::map<int, int> _cellCount;
     int _nbNeutralCells = 0;
+    std::string _status;
 
     std::vector<sf::Color> _colors;
     sf::FloatRect _boardBoundingBox;

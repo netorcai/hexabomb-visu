@@ -27,6 +27,10 @@ HexabombRenderer::HexabombRenderer()
     _emptyTexture.setSmooth(true);
 
     _monospaceFont.loadFromFile(searchFontAbsoluteFilename("DejaVuSansMono.ttf"));
+
+    _statusText.setFont(_monospaceFont);
+    _statusText.setCharacterSize(20);
+    _statusText.setFillColor(sf::Color::Black);
 }
 
 HexabombRenderer::~HexabombRenderer()
@@ -115,7 +119,7 @@ void HexabombRenderer::onGameInit(
     _boardView.reset(_boardBoundingBox);
 
     // Initialize misc. info
-    updatePlayerInfo(1, lastTurnNumber, playersInfo);
+    updatePlayerInfo(0, lastTurnNumber, playersInfo);
     _score = score;
     updateCellCount(cellCount);
 }
@@ -182,7 +186,7 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
     // Update raw data
     if (playersInfo.empty())
     {
-        // Probably coming from a GAME_ENDS.
+        // Coming from a GAME_ENDS.
         for (auto & info : _playersInfo)
         {
             // Empty the address of non-disconnected players.
@@ -207,16 +211,23 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
         _playersInfo = playersInfo;
 
     // Update rendering data
+    const float baseH = 70.f;
     const float hPlayers = 100.f;
     const float hLines = 20.f;
     const float rectX = 2.f;
     const float textX = 4.f;
     const float barThickness = 1.f;
 
-    sf::Text text;
-    text.setFont(_monospaceFont);
-    text.setCharacterSize(20);
-    text.setFillColor(sf::Color::Black);
+    sf::Text text = _statusText;
+
+    text.setPosition(textX, 0.f);
+    char * turnCString = nullptr;
+    asprintf(&turnCString, "turn: %0*d/%d", (int)log10f(lastTurnNumber)+1, currentTurnNumber, lastTurnNumber);
+    text.setString(std::string(turnCString));
+    free(turnCString);
+    _pInfoTexts.push_back(text);
+
+    _statusText.setPosition(textX, hLines);
 
     for (unsigned int i = 0; i < _playersInfo.size(); i++)
     {
@@ -227,26 +238,26 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
         rect.setFillColor(_colors[i+1]);
         rect.setOutlineThickness(2.f);
         rect.setOutlineColor(sf::Color::Black);
-        rect.setPosition(rectX, hPlayers*i);
+        rect.setPosition(rectX, baseH + hPlayers*i);
         _pInfoRectShapes.push_back(rect);
 
         j++;
-        text.setPosition(textX, hPlayers*i + hLines*j);
+        text.setPosition(textX, baseH + hPlayers*i + hLines*j);
         text.setString(info.nickname + " (" + std::to_string(info.playerID) + ")");
         _pInfoTexts.push_back(text);
 
         j++;
-        text.setPosition(textX, hPlayers*i + hLines*j);
+        text.setPosition(textX, baseH + hPlayers*i + hLines*j);
         text.setString("  score: " + std::to_string(_score[i]));
         _pInfoTexts.push_back(text);
 
         j++;
-        text.setPosition(textX, hPlayers*i + hLines*j);
+        text.setPosition(textX, baseH + hPlayers*i + hLines*j);
         text.setString("  #cells: " + std::to_string(_cellCount[i]));
         _pInfoTexts.push_back(text);
 
         j++;
-        text.setPosition(textX, hPlayers*i + hLines*j);
+        text.setPosition(textX, baseH + hPlayers*i + hLines*j);
         text.setString("  " + info.remoteAddress);
         _pInfoTexts.push_back(text);
 
@@ -257,13 +268,13 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
             rect.setOutlineThickness(1.f);
 
             rect.setSize(sf::Vector2f(diagonalLength, barThickness));
-            rect.setPosition(rectX, hPlayers*i);
+            rect.setPosition(rectX, baseH + hPlayers*i);
             rect.setOrigin(diagonalLength/2, barThickness/2);
             rect.setRotation(acos(_piRectWidth/diagonalLength) * 180.f/M_PI);
             rect.setOrigin(0.f, 0.f);
             _pInfoRectShapes.push_back(rect);
 
-            rect.setPosition(rectX, hPlayers*(i+1));
+            rect.setPosition(rectX, baseH + hPlayers*(i+1));
             rect.setOrigin(diagonalLength/2, barThickness/2);
             rect.setRotation(-acos(_piRectWidth/diagonalLength) * 180.f/M_PI);
             rect.setOrigin(0.f, 0.f);
@@ -301,6 +312,15 @@ void HexabombRenderer::updateCellCount(const std::map<int, int> & cellCount)
     }
 }
 
+void HexabombRenderer::onStatusChange(const std::string & status)
+{
+    if (_status != "game over")
+    {
+        _status = status;
+        _statusText.setString(_status);
+    }
+}
+
 void HexabombRenderer::render(sf::RenderWindow & window)
 {
     // Clear the window
@@ -329,6 +349,7 @@ void HexabombRenderer::render(sf::RenderWindow & window)
 
     // Draw player informations
     window.setView(_playersInfoView);
+    window.draw(_statusText);
     for (const auto & shape : _pInfoRectShapes)
     {
         window.draw(shape);

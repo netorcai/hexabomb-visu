@@ -33,7 +33,7 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
         while (!shouldQuit)
         {
             std::string msgStr;
-            if (c.recvStringNonBlocking(msgStr, 50.0))
+            if (c.recvStringNonBlocking(msgStr, 5.0))
             {
                 // A message has been received.
                 json msgJson = json::parse(msgStr);
@@ -42,7 +42,7 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
                     turn = new TurnMessage;
                     *turn = parseTurnMessage(msgJson);
 
-                    printf("Received TURN %d\n", turn->turnNumber); fflush(stdout);
+                    printf("Received TURN %d\n", turn->turnNumber+1); fflush(stdout);
 
                     // Only forward TURN if the queue is empty.
                     // This avoids flooding the renderer if it is slower than the network.
@@ -63,7 +63,8 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
                     msg.type = MessageType::ERROR;
                     asprintf((char**)&msg.data, "%s",
                         ((std::string)msgJson["kick_reason"]).c_str());
-                    printf("Kicked from netorcai. Reason: %s", (char*) msg.data);
+                    printf("Kicked from netorcai. Reason: %s\n", (char*) msg.data);
+                    fflush(stdout);
                     to_renderer->push(msg);
                     shouldQuit = true;
                 }
@@ -161,14 +162,14 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             {
                 auto turn = (TurnMessage *) msg.data;
                 parseGameState(turn->gameState, cells, characters, bombs, score, cellCount);
-                renderer.onTurn(cells, characters, bombs, score, cellCount, turn->turnNumber, nbTurnsMax, turn->playersInfo);
+                renderer.onTurn(cells, characters, bombs, score, cellCount, turn->turnNumber+1, nbTurnsMax, turn->playersInfo);
                 delete turn;
             }
             else if (msg.type == MessageType::GAME_ENDS)
             {
                 auto gameEnds = (GameEndsMessage *) msg.data;
                 parseGameState(gameEnds->gameState, cells, characters, bombs, score, cellCount);
-                // TODO: print something on the screen.
+                renderer.onStatusChange("game over");
                 renderer.onTurn(cells, characters, bombs, score, cellCount, nbTurnsMax, nbTurnsMax);
                 delete gameEnds;
             }
@@ -176,7 +177,8 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             {
                 if (!initialized)
                     window.close();
-                // TODO: print something on screen otherwise
+                else
+                    renderer.onStatusChange(std::string((char *) msg.data));
                 free((char *) msg.data);
             }
         }
