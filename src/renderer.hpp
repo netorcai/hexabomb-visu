@@ -45,6 +45,7 @@ private:
         int lastTurnNumber,
         const std::vector<netorcai::PlayerInfo> & playersInfo);
     void updateCellCount(const std::map<int, int> & cellCount);
+    sf::Vector2f axialToCartesian(Coordinates axial) const;
 
 private:
     sf::Texture _bombTexture;
@@ -53,7 +54,7 @@ private:
 
     sf::Font _monospaceFont;
 
-    std::unordered_map<Coordinates, sf::Sprite*> _cellSprites;
+    std::unordered_map<Coordinates, sf::CircleShape*> _cellShapes;
     std::unordered_map<int, sf::Sprite*> _characterSprites;
     std::vector<sf::Sprite*> _aliveCharacters;
     std::vector<sf::Sprite*> _bombSprites;
@@ -75,6 +76,8 @@ private:
     sf::View _cellCountDistributionView;
 
     const float _textureSize = 256.0f;
+    const float _hexBaseLength = 128.0f;
+    const float _hexOutlineThickness = 8.0f;
     const sf::Color _backgroundColor = sf::Color(0xa0a0a0ff);
     const sf::Vector2f _characterScale = sf::Vector2f(0.7f, 0.7f);
     const sf::Vector2f _bombScale = sf::Vector2f(0.5f, 0.5f);

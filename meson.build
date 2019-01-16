@@ -29,7 +29,6 @@ visu = executable('hexabomb-visu', src,
 share_files = [
     'assets/img/bomb.png',
     'assets/img/char.png',
-    'assets/img/empty.png',
     'assets/fonts/DejaVuSansMono.ttf'
 ]
 

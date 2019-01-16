@@ -5,9 +5,9 @@
 
 #include "util.hpp"
 
-static sf::Vector2f axialToCartesian(Coordinates axial)
+sf::Vector2f HexabombRenderer::axialToCartesian(Coordinates axial) const
 {
-    double base_length = 128.0;
+    double base_length = _hexBaseLength + _hexOutlineThickness;
 
     sf::Vector2f res;
     res.x = base_length * (sqrt(3.0) * axial.q + sqrt(3.0) / 2.0 * axial.r);
@@ -20,11 +20,9 @@ HexabombRenderer::HexabombRenderer()
 {
     _bombTexture.loadFromFile(searchImageAbsoluteFilename("bomb.png"));
     _characterTexture.loadFromFile(searchImageAbsoluteFilename("char.png"));
-    _emptyTexture.loadFromFile(searchImageAbsoluteFilename("empty.png"));
 
     _bombTexture.setSmooth(true);
     _characterTexture.setSmooth(true);
-    _emptyTexture.setSmooth(true);
 
     _monospaceFont.loadFromFile(searchFontAbsoluteFilename("DejaVuSansMono.ttf"));
 
@@ -35,7 +33,7 @@ HexabombRenderer::HexabombRenderer()
 
 HexabombRenderer::~HexabombRenderer()
 {
-    for (const auto & [coord, sprite] : _cellSprites)
+    for (const auto & [coord, sprite] : _cellShapes)
         delete sprite;
 
     // Draw characters
@@ -61,20 +59,40 @@ void HexabombRenderer::onGameInit(
     float xmax = std::numeric_limits<float>::min();
     float ymax = std::numeric_limits<float>::min();
 
+    float xminHex = xmin;
+    float yminHex = ymin;
+    float xmaxHex = xmax;
+    float ymaxHex = ymax;
+
     generatePlayerColors(2);
 
     _nbNeutralCells = 0;
+
+    sf::CircleShape hex(_hexBaseLength, 6);
+    sf::Vector2f hexCenter;
+    for (size_t i = 0; i < hex.getPointCount(); i++)
+    {
+        auto p = hex.getPoint(i);
+        hexCenter += p;
+        if (p.x < xminHex) xminHex = p.x;
+        if (p.y < yminHex) yminHex = p.y;
+        if (p.x > xmaxHex) xmaxHex = p.x;
+        if (p.y > ymaxHex) ymaxHex = p.y;
+    }
+    hexCenter = hexCenter / (float)hex.getPointCount();
+    float hexWidth = xmaxHex - xminHex;
+    float hexHeight = ymaxHex - yminHex;
+
     for (const auto & [coord, cell] : cells)
     {
-        auto * sprite = new sf::Sprite;
-        sprite->setTexture(_emptyTexture);
+        auto * shape = new sf::CircleShape(_hexBaseLength, 6);
 
         sf::Vector2f cartesian = axialToCartesian(coord);
-        sprite->setPosition(cartesian);
-        sprite->setOrigin(sf::Vector2f(_textureSize/2.0, _textureSize/2.0));
-        sprite->setColor(_colors[cell.color]);
+        shape->setPosition(cartesian);
+        shape->setOrigin(hexCenter);
+        shape->setFillColor(_colors[cell.color]);
 
-        _cellSprites[coord] = sprite;
+        _cellShapes[coord] = shape;
 
         if (cell.color == 0)
             _nbNeutralCells++;
@@ -112,9 +130,10 @@ void HexabombRenderer::onGameInit(
 
     // Set view
     _boardBoundingBox = sf::FloatRect(
-        xmin-_textureSize/2.0, ymin-_textureSize/2.0,
-        xmax - xmin + _textureSize,
-        ymax - ymin + _textureSize
+        xmin - hexWidth/2.f - 2*_hexOutlineThickness,
+        ymin - hexHeight/2.f - 2*_hexOutlineThickness,
+        xmax - xmin + hexWidth + 4*_hexOutlineThickness,
+        ymax - ymin + hexHeight + 4*_hexOutlineThickness
     );
     _boardView.reset(_boardBoundingBox);
 
@@ -141,8 +160,8 @@ void HexabombRenderer::onTurn(
     _nbNeutralCells = 0;
     for (const auto & [coord, cell] : cells)
     {
-        auto * sprite = _cellSprites[coord];
-        sprite->setColor(_colors[cell.color]);
+        auto * sprite = _cellShapes[coord];
+        sprite->setFillColor(_colors[cell.color]);
 
         if (cell.color == 0)
             _nbNeutralCells++;
@@ -287,7 +306,7 @@ void HexabombRenderer::updateCellCount(const std::map<int, int> & cellCount)
 {
     _cellCount = cellCount;
 
-    const float nbCells = _cellSprites.size();
+    const float nbCells = _cellShapes.size();
 
     sf::RectangleShape rect;
     float width = _ccdWidth * _nbNeutralCells / nbCells;
@@ -329,10 +348,28 @@ void HexabombRenderer::render(sf::RenderWindow & window)
     // Set view and viewport. Should not be done at each frame
     window.setView(_boardView);
 
-    // Draw cells
-    for (const auto & [coord, sprite] : _cellSprites)
+    // Draw cells borders. Copy is delibarate here.
+    for (const auto & [coord, _] : _cellShapes)
     {
-        window.draw(*sprite);
+        sf::CircleShape blackHex(128.f + 16.f, 6);
+        sf::Vector2f cartesian = axialToCartesian(coord);
+        blackHex.setPosition(cartesian);
+
+        sf::Vector2f center;
+        for (size_t i = 0; i < blackHex.getPointCount(); i++)
+            center += blackHex.getPoint(i);
+        center = center / (float)blackHex.getPointCount();
+
+        blackHex.setOrigin(center);
+        blackHex.setFillColor(sf::Color::Black);
+
+        window.draw(blackHex);
+    }
+
+    // Draw cells
+    for (const auto & [_, shape] : _cellShapes)
+    {
+        window.draw(*shape);
     }
 
     // Draw characters
