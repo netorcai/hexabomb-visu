@@ -37,6 +37,7 @@ public:
 
     void render(sf::RenderWindow & window);
     void updateView(int newWidth, int newHeight);
+    void toggleShowCoordinates();
 
 private:
     void generatePlayerColors(int nbColors);
@@ -48,6 +49,8 @@ private:
     sf::Vector2f axialToCartesian(Coordinates axial) const;
 
 private:
+    bool _showCoordinates = false;
+
     sf::Texture _bombTexture;
     sf::Texture _characterTexture;
     sf::Texture _emptyTexture;

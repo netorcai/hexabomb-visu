@@ -367,9 +367,26 @@ void HexabombRenderer::render(sf::RenderWindow & window)
     }
 
     // Draw cells
-    for (const auto & [_, shape] : _cellShapes)
+    for (const auto & [coord, shape] : _cellShapes)
     {
         window.draw(*shape);
+
+        const int charSize = 64;
+        const sf::Glyph glyph = _monospaceFont.getGlyph('0', charSize, false);
+
+        if (_showCoordinates)
+        {
+            sf::Text text;
+            text.setFont(_monospaceFont);
+            text.setCharacterSize(charSize);
+            text.setFillColor(sf::Color::Black);
+            text.setString("(" + std::to_string(coord.q) + "," + std::to_string(coord.r) + ")");
+            text.setOrigin(1.1f*(text.getString().getSize() * glyph.bounds.width / 2.f), 1.1f*(glyph.bounds.height/2.f));
+
+            sf::Vector2f cartesian = axialToCartesian(coord);
+            text.setPosition(cartesian);
+            window.draw(text);
+        }
     }
 
     // Draw characters
@@ -441,6 +458,11 @@ void HexabombRenderer::updateView(int newWidth, int newHeight)
     // Cell count distribution
     _cellCountDistributionView.reset(sf::FloatRect(0.f, 0.f, _ccdWidth, _ccdHeight));
     _cellCountDistributionView.setViewport(sf::FloatRect(0.f, 1-_ccdHeightRatioInScreen, 1.f, 1.f));
+}
+
+void HexabombRenderer::toggleShowCoordinates()
+{
+    _showCoordinates = !_showCoordinates;
 }
 
 void HexabombRenderer::generatePlayerColors(int nbColors)

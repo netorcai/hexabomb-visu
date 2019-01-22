@@ -142,6 +142,11 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
                 window.close();
             else if (event.type == sf::Event::Resized)
                 renderer.updateView(event.size.width, event.size.height);
+            else if (event.type == sf::Event::KeyReleased)
+            {
+                if (event.key.code == sf::Keyboard::C)
+                    renderer.toggleShowCoordinates();
+            }
         }
 
         // Something has been received from the network?
