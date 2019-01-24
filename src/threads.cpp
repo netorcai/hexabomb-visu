@@ -41,8 +41,9 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
                 {
                     turn = new TurnMessage;
                     *turn = parseTurnMessage(msgJson);
+                    const int turnNumber = turn->turnNumber;
 
-                    printf("Received TURN %d\n", turn->turnNumber+1); fflush(stdout);
+                    printf("Received TURN %d\n", turnNumber+1); fflush(stdout);
 
                     // Only forward TURN if the queue is empty.
                     // This avoids flooding the renderer if it is slower than the network.
@@ -56,7 +57,7 @@ void network_thread_function(boost::lockfree::queue<Message> * from_renderer,
                         delete turn;
 
                     // Send TURN_ACK to netorcai, so future turns can be received.
-                    c.sendTurnAck(turn->turnNumber, json::parse(R"([])"));
+                    c.sendTurnAck(turnNumber, json::parse(R"([])"));
                 }
                 else if (msgJson["message_type"] == "KICK")
                 {
