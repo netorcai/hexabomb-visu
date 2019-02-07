@@ -36,15 +36,22 @@ Build instructions
 hexabomb-visu can be built thanks to [Meson] and [Ninja].
 
 ```bash
+# Ajust this variable to decide where hexabomb-visu should be installed.
+# For a system installation, /usr should be fine.
+export INSTALL_PREFIX=/tmp/install
+
 # Tell pkg-config to search for dependencies in the previously set install directory.
 # This is not required if the dependencies are installed in a standard path such as /usr
 export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${DEPS_INSTALL_DIRECTORY}/lib/pkgconfig"
 
 # Create a ninja build directory in ./build
-meson build
+meson build --prefix=${INSTALL_PREFIX}
 
 # Compile the project.
 ninja -C build
+
+# Optionnally, install the produced binary with its assets (images and fonts).
+ninja install -C build
 ```
 
 Run instructions
@@ -55,7 +62,7 @@ Run instructions
 # This is not required if the dependencies are installed in a standard path such as /usr
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${DEPS_INSTALL_DIRECTORY}/lib"
 
-# Run the project. Use --help to see available options.
+# Run the project from the build directory. Use --help to see available options.
 ./build/hexabomb-visu
 ```
 
