@@ -20,6 +20,7 @@ HexabombRenderer::HexabombRenderer()
 {
     _bombTexture.loadFromFile(searchImageAbsoluteFilename("bomb.png"));
     _characterTexture.loadFromFile(searchImageAbsoluteFilename("char.png"));
+    _deadCharacterTexture.loadFromFile(searchImageAbsoluteFilename("char_dead.png"));
 
     _bombTexture.setSmooth(true);
     _characterTexture.setSmooth(true);
@@ -114,7 +115,7 @@ void HexabombRenderer::onGameInit(
         sprite->setOrigin(sf::Vector2f((2.0/3.0)*_textureSize, _textureSize/2.0));
 
         _characterSprites[character.id] = sprite;
-        _aliveCharacters.push_back(sprite);
+        _charactersToDraw.push_back(sprite);
     }
 
     for (const auto & bomb : bombs)
@@ -167,14 +168,20 @@ void HexabombRenderer::onTurn(
             _nbNeutralCells++;
     }
 
-    _aliveCharacters.resize(0);
+    _charactersToDraw.resize(0);
     for (const auto & character : characters)
     {
         auto * sprite = _characterSprites[character.id];
         sprite->setPosition(axialToCartesian(character.coord));
 
-        if (character.isAlive)
-            _aliveCharacters.push_back(sprite);
+        // Change texture if the character alive state changed
+        auto texture = sprite->getTexture();
+        if (character.isAlive && texture != &_characterTexture)
+            sprite->setTexture(_characterTexture);
+        else if (!character.isAlive && texture != &_deadCharacterTexture)
+            sprite->setTexture(_deadCharacterTexture);
+
+        _charactersToDraw.push_back(sprite);
     }
 
     for (auto * sprite : _bombSprites)
@@ -390,7 +397,7 @@ void HexabombRenderer::render(sf::RenderWindow & window)
     }
 
     // Draw characters
-    for (const auto & sprite : _aliveCharacters)
+    for (const auto & sprite : _charactersToDraw)
     {
         window.draw(*sprite);
     }

@@ -53,13 +53,14 @@ private:
 
     sf::Texture _bombTexture;
     sf::Texture _characterTexture;
+    sf::Texture _deadCharacterTexture;
     sf::Texture _emptyTexture;
 
     sf::Font _monospaceFont;
 
     std::unordered_map<Coordinates, sf::CircleShape*> _cellShapes;
     std::unordered_map<int, sf::Sprite*> _characterSprites;
-    std::vector<sf::Sprite*> _aliveCharacters;
+    std::vector<sf::Sprite*> _charactersToDraw;
     std::vector<sf::Sprite*> _bombSprites;
     std::vector<sf::Text> _pInfoTexts;
     std::vector<sf::RectangleShape> _pInfoRectShapes;
