@@ -181,7 +181,9 @@ void HexabombRenderer::onTurn(
         else if (!character.isAlive && texture != &_deadCharacterTexture)
             sprite->setTexture(_deadCharacterTexture);
 
-        _charactersToDraw.push_back(sprite);
+        // Hide dead characters in sudden death
+        if (character.isAlive || !_isSuddenDeath)
+            _charactersToDraw.push_back(sprite);
     }
 
     for (auto * sprite : _bombSprites)
@@ -470,6 +472,11 @@ void HexabombRenderer::updateView(int newWidth, int newHeight)
 void HexabombRenderer::toggleShowCoordinates()
 {
     _showCoordinates = !_showCoordinates;
+}
+
+void HexabombRenderer::setSuddenDeath(bool isSuddenDeath)
+{
+    _isSuddenDeath = isSuddenDeath;
 }
 
 void HexabombRenderer::generatePlayerColors(int nbColors)

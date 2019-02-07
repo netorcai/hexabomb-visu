@@ -160,6 +160,8 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
                 auto gameStarts = (GameStartsMessage *) msg.data;
                 parseGameState(gameStarts->initialGameState, cells, characters, bombs, score, cellCount);
                 nbTurnsMax = gameStarts->nbTurnsMax;
+                if (gameStarts->nbSpecialPlayers > 0)
+                    renderer.setSuddenDeath(true);
                 renderer.onGameInit(cells, characters, bombs, score, cellCount, nbTurnsMax, gameStarts->playersInfo);
                 delete gameStarts;
                 initialized = true;

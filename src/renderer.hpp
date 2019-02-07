@@ -38,6 +38,7 @@ public:
     void render(sf::RenderWindow & window);
     void updateView(int newWidth, int newHeight);
     void toggleShowCoordinates();
+    void setSuddenDeath(bool isSuddenDeath);
 
 private:
     void generatePlayerColors(int nbColors);
@@ -50,6 +51,7 @@ private:
 
 private:
     bool _showCoordinates = false;
+    bool _isSuddenDeath = false;
 
     sf::Texture _bombTexture;
     sf::Texture _characterTexture;
