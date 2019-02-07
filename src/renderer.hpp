@@ -56,6 +56,7 @@ private:
     sf::Texture _bombTexture;
     sf::Texture _characterTexture;
     sf::Texture _deadCharacterTexture;
+    sf::Texture _specialCharacterTexture;
     sf::Texture _emptyTexture;
 
     sf::Font _monospaceFont;

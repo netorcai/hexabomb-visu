@@ -21,6 +21,7 @@ HexabombRenderer::HexabombRenderer()
     _bombTexture.loadFromFile(searchImageAbsoluteFilename("bomb.png"));
     _characterTexture.loadFromFile(searchImageAbsoluteFilename("char.png"));
     _deadCharacterTexture.loadFromFile(searchImageAbsoluteFilename("char_dead.png"));
+    _specialCharacterTexture.loadFromFile(searchImageAbsoluteFilename("char_special.png"));
 
     _bombTexture.setSmooth(true);
     _characterTexture.setSmooth(true);
@@ -91,7 +92,11 @@ void HexabombRenderer::onGameInit(
         sf::Vector2f cartesian = axialToCartesian(coord);
         shape->setPosition(cartesian);
         shape->setOrigin(hexCenter);
-        shape->setFillColor(_colors[cell.color]);
+
+        int drawColor = cell.color;
+        if (_isSuddenDeath)
+            drawColor = 0;
+        shape->setFillColor(_colors[drawColor]);
 
         _cellShapes[coord] = shape;
 
@@ -116,6 +121,16 @@ void HexabombRenderer::onGameInit(
 
         _characterSprites[character.id] = sprite;
         _charactersToDraw.push_back(sprite);
+
+        if (_isSuddenDeath)
+        {
+            // Change texture of special characters
+            if (character.color == 1)
+                sprite->setTexture(_specialCharacterTexture);
+
+            auto * cellSprite = _cellShapes[character.coord];
+            cellSprite->setFillColor(_colors[character.color]);
+        }
     }
 
     for (const auto & bomb : bombs)
@@ -162,7 +177,10 @@ void HexabombRenderer::onTurn(
     for (const auto & [coord, cell] : cells)
     {
         auto * sprite = _cellShapes[coord];
-        sprite->setFillColor(_colors[cell.color]);
+        int drawColor = cell.color;
+        if (_isSuddenDeath)
+            drawColor = 0;
+        sprite->setFillColor(_colors[drawColor]);
 
         if (cell.color == 0)
             _nbNeutralCells++;
@@ -174,12 +192,21 @@ void HexabombRenderer::onTurn(
         auto * sprite = _characterSprites[character.id];
         sprite->setPosition(axialToCartesian(character.coord));
 
-        // Change texture if the character alive state changed
-        auto texture = sprite->getTexture();
-        if (character.isAlive && texture != &_characterTexture)
-            sprite->setTexture(_characterTexture);
-        else if (!character.isAlive && texture != &_deadCharacterTexture)
-            sprite->setTexture(_deadCharacterTexture);
+        if (_isSuddenDeath && character.isAlive)
+        {
+            auto * cellSprite = _cellShapes[character.coord];
+            cellSprite->setFillColor(_colors[character.color]);
+        }
+
+        if (!_isSuddenDeath)
+        {
+            // Change texture if the character alive state changed
+            auto texture = sprite->getTexture();
+            if (character.isAlive && texture != &_characterTexture)
+                sprite->setTexture(_characterTexture);
+            else if (!character.isAlive && texture != &_deadCharacterTexture)
+                sprite->setTexture(_deadCharacterTexture);
+        }
 
         // Hide dead characters in sudden death
         if (character.isAlive || !_isSuddenDeath)
@@ -497,6 +524,8 @@ void HexabombRenderer::generatePlayerColors(int nbColors)
     // Generate the palette.
     _colors.clear();
     _colors.push_back(sf::Color::White); // Neutral
+    if (_isSuddenDeath)
+        _colors.push_back(sf::Color::White); // Special player
 
     while ((int)_colors.size() < nbColors + 1)
     {

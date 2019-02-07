@@ -19,5 +19,8 @@ build char.png: resize_png_256x256 char_big.png
 build char_dead_big.png: svg_to_png char_dead.svg
 build char_dead.png: resize_png_256x256 char_dead_big.png
 
+build char_special_big.png: svg_to_png char_special.svg
+build char_special.png: resize_png_256x256 char_special_big.png
+
 build empty_big.png: svg_to_png_high_dpi empty.svg
 build empty.png: resize_png_256x256_no_extent empty_big.png
