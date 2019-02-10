@@ -61,5 +61,6 @@ void parseGameState(const netorcai::json & gameState,
     std::unordered_map<Coordinates, Cell> & cells,
     std::vector<Character> & characters,
     std::vector<Bomb> & bombs,
+    std::unordered_map<int, std::vector<Coordinates> > & explosions,
     std::map<int, int> & score,
     std::map<int, int> & cellCount);

@@ -127,6 +127,7 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
     std::unordered_map<Coordinates, Cell> cells;
     std::vector<Character> characters;
     std::vector<Bomb> bombs;
+    std::unordered_map<int, std::vector<Coordinates> > explosions;
     std::map<int, int> score, cellCount;
     int nbTurnsMax = -1;
 
@@ -158,7 +159,7 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             if (msg.type == MessageType::GAME_STARTS)
             {
                 auto gameStarts = (GameStartsMessage *) msg.data;
-                parseGameState(gameStarts->initialGameState, cells, characters, bombs, score, cellCount);
+                parseGameState(gameStarts->initialGameState, cells, characters, bombs, explosions, score, cellCount);
                 nbTurnsMax = gameStarts->nbTurnsMax;
                 if (gameStarts->nbSpecialPlayers > 0)
                     renderer.setSuddenDeath(true);
@@ -169,16 +170,16 @@ void renderer_thread_function(boost::lockfree::queue<Message> * from_network,
             else if (msg.type == MessageType::TURN)
             {
                 auto turn = (TurnMessage *) msg.data;
-                parseGameState(turn->gameState, cells, characters, bombs, score, cellCount);
-                renderer.onTurn(cells, characters, bombs, score, cellCount, turn->turnNumber+1, nbTurnsMax, turn->playersInfo);
+                parseGameState(turn->gameState, cells, characters, bombs, explosions, score, cellCount);
+                renderer.onTurn(cells, characters, bombs, explosions, score, cellCount, turn->turnNumber+1, nbTurnsMax, turn->playersInfo);
                 delete turn;
             }
             else if (msg.type == MessageType::GAME_ENDS)
             {
                 auto gameEnds = (GameEndsMessage *) msg.data;
-                parseGameState(gameEnds->gameState, cells, characters, bombs, score, cellCount);
+                parseGameState(gameEnds->gameState, cells, characters, bombs, explosions, score, cellCount);
                 renderer.onStatusChange("game over");
-                renderer.onTurn(cells, characters, bombs, score, cellCount, nbTurnsMax, nbTurnsMax);
+                renderer.onTurn(cells, characters, bombs, explosions, score, cellCount, nbTurnsMax, nbTurnsMax);
                 delete gameEnds;
             }
             else if (msg.type == MessageType::ERROR)

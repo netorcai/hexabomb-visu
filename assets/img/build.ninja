@@ -24,3 +24,6 @@ build char_special.png: resize_png_256x256 char_special_big.png
 
 build empty_big.png: svg_to_png_high_dpi empty.svg
 build empty.png: resize_png_256x256_no_extent empty_big.png
+
+build explosion_big.png: svg_to_png explosion.svg
+build explosion.png: resize_png_256x256 explosion_big.png

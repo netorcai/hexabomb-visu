@@ -64,6 +64,30 @@ static void parseBombs(const netorcai::json & jsonBombs, std::vector<Bomb> & bom
     }
 }
 
+static void parseExplosions(
+    const netorcai::json & jsonExplosions,
+    std::unordered_map<int, std::vector<Coordinates> > & explosions)
+{
+    explosions.clear();
+    netorcai::json * mutObject = const_cast<netorcai::json*>(&jsonExplosions);
+    for (netorcai::json::iterator it = mutObject->begin(); it != mutObject->end(); ++it)
+    {
+        const int color = std::stoi(it.key());
+        std::vector<Coordinates> coords;
+
+        for (const auto & jsonCoord : it.value())
+        {
+            Coordinates coord;
+            coord.q = jsonCoord["q"];
+            coord.r = jsonCoord["r"];
+
+            coords.push_back(coord);
+        }
+
+        explosions[color] = coords;
+    }
+}
+
 static void parsePlayerIntMap(const netorcai::json & jsonObject, std::map<int, int> & m)
 {
     netorcai::json * mutObject = const_cast<netorcai::json*>(&jsonObject);
@@ -87,12 +111,14 @@ void parseGameState(const netorcai::json & gameState,
     std::unordered_map<Coordinates, Cell> & cells,
     std::vector<Character> & characters,
     std::vector<Bomb> & bombs,
+    std::unordered_map<int, std::vector<Coordinates> > & explosions,
     std::map<int, int> & score,
     std::map<int, int> & cellCount)
 {
     parseCells(gameState["cells"], cells);
     parseCharacters(gameState["characters"], characters);
     parseBombs(gameState["bombs"], bombs);
+    parseExplosions(gameState["explosions"], explosions);
     parsePlayerIntMap(gameState["score"], score);
     parsePlayerIntMap(gameState["cell_count"], cellCount);
 }

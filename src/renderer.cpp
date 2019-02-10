@@ -22,6 +22,7 @@ HexabombRenderer::HexabombRenderer()
     _characterTexture.loadFromFile(searchImageAbsoluteFilename("char.png"));
     _deadCharacterTexture.loadFromFile(searchImageAbsoluteFilename("char_dead.png"));
     _specialCharacterTexture.loadFromFile(searchImageAbsoluteFilename("char_special.png"));
+    _explosionTexture.loadFromFile(searchImageAbsoluteFilename("explosion.png"));
 
     _bombTexture.setSmooth(true);
     _characterTexture.setSmooth(true);
@@ -163,6 +164,7 @@ void HexabombRenderer::onTurn(
     const std::unordered_map<Coordinates, Cell> & cells,
     const std::vector<Character> & characters,
     const std::vector<Bomb> & bombs,
+    const std::unordered_map<int, std::vector<Coordinates> > & explosions,
     const std::map<int, int> & score,
     const std::map<int, int> & cellCount,
     int currentTurnNumber,
@@ -226,6 +228,24 @@ void HexabombRenderer::onTurn(
         sprite->setScale(_bombScale);
 
         _bombSprites.push_back(sprite);
+    }
+
+    for (auto * sprite : _explosionSprites)
+        delete sprite;
+    _explosionSprites.clear();
+
+    for (const auto& [color, coordinates] : explosions)
+    {
+        for (const auto& coord : coordinates)
+        {
+            auto * sprite = new sf::Sprite;
+            sprite->setTexture(_explosionTexture);
+            sprite->setPosition(axialToCartesian(coord));
+            sprite->setOrigin(sf::Vector2f(_textureSize/2.0, _textureSize/2.0));
+            sprite->setScale(_explosionScale);
+
+            _explosionSprites.push_back(sprite);
+        }
     }
 
     // Update misc. info
@@ -433,6 +453,12 @@ void HexabombRenderer::render(sf::RenderWindow & window)
 
     // Draw bombs
     for (const auto & sprite : _bombSprites)
+    {
+        window.draw(*sprite);
+    }
+
+    // Draw explosions
+    for (const auto & sprite : _explosionSprites)
     {
         window.draw(*sprite);
     }

@@ -32,6 +32,7 @@ share_files = [
     'assets/img/char.png',
     'assets/img/char_dead.png',
     'assets/img/char_special.png',
+    'assets/img/explosion.png',
     'assets/fonts/DejaVuSansMono.ttf'
 ]
 

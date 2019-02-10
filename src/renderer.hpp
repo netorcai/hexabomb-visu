@@ -27,6 +27,7 @@ public:
         const std::unordered_map<Coordinates, Cell> & cells,
         const std::vector<Character> & characters,
         const std::vector<Bomb> & bombs,
+        const std::unordered_map<int, std::vector<Coordinates> > & explosions,
         const std::map<int, int> & score,
         const std::map<int, int> & cellCount,
         int currentTurnNumber,
@@ -57,7 +58,7 @@ private:
     sf::Texture _characterTexture;
     sf::Texture _deadCharacterTexture;
     sf::Texture _specialCharacterTexture;
-    sf::Texture _emptyTexture;
+    sf::Texture _explosionTexture;
 
     sf::Font _monospaceFont;
 
@@ -65,6 +66,7 @@ private:
     std::unordered_map<int, sf::Sprite*> _characterSprites;
     std::vector<sf::Sprite*> _charactersToDraw;
     std::vector<sf::Sprite*> _bombSprites;
+    std::vector<sf::Sprite*> _explosionSprites;
     std::vector<sf::Text> _pInfoTexts;
     std::vector<sf::RectangleShape> _pInfoRectShapes;
     std::vector<sf::RectangleShape> _ccdRectShapes;
@@ -88,6 +90,7 @@ private:
     const sf::Color _backgroundColor = sf::Color(0xa0a0a0ff);
     const sf::Vector2f _characterScale = sf::Vector2f(0.7f, 0.7f);
     const sf::Vector2f _bombScale = sf::Vector2f(0.5f, 0.5f);
+    const sf::Vector2f _explosionScale = sf::Vector2f(0.7f, 0.7f);
     const float _piRectWidth = 280.f;
     const float _ccdWidth = 100.f;
     const float _ccdHeight = 10.f;
