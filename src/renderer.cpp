@@ -155,8 +155,8 @@ void HexabombRenderer::onGameInit(
     _boardView.reset(_boardBoundingBox);
 
     // Initialize misc. info
-    updatePlayerInfo(0, lastTurnNumber, playersInfo);
     _score = score;
+    updatePlayerInfo(0, lastTurnNumber, playersInfo);
     updateCellCount(cellCount);
 }
 
@@ -249,8 +249,8 @@ void HexabombRenderer::onTurn(
     }
 
     // Update misc. info
-    updatePlayerInfo(currentTurnNumber, lastTurnNumber, playersInfo);
     _score = score;
+    updatePlayerInfo(currentTurnNumber, lastTurnNumber, playersInfo);
     updateCellCount(cellCount);
 }
 
@@ -285,9 +285,31 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
     else
         _playersInfo = playersInfo;
 
+    if (_isSuddenDeath)
+    {
+        // Remove special player.
+        std::vector<netorcai::PlayerInfo> pInfoTmp;
+        for (const auto & pInfo : _playersInfo)
+        {
+            if (pInfo.playerID > 0)
+                pInfoTmp.push_back(pInfo);
+        }
+
+        // Sort players by score.
+        sort(pInfoTmp.begin(), pInfoTmp.end(),
+            [this](const netorcai::PlayerInfo & a, const netorcai::PlayerInfo & b) -> bool
+        {
+            return _score[a.playerID] > _score[b.playerID];
+        });
+
+        _playersInfo = pInfoTmp;
+    }
+
     // Update rendering data
     const float baseH = 70.f;
-    const float hPlayers = 100.f;
+    float hPlayers = 100.f;
+    if (_isSuddenDeath)
+        hPlayers = 75.f;
     const float hLines = 20.f;
     const float rectX = 2.f;
     const float textX = 4.f;
@@ -310,7 +332,7 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
         int j = -1;
 
         sf::RectangleShape rect(sf::Vector2f(_piRectWidth, hPlayers));
-        rect.setFillColor(_colors[i+1]);
+        rect.setFillColor(_colors[info.playerID+1]);
         rect.setOutlineThickness(2.f);
         rect.setOutlineColor(sf::Color::Black);
         rect.setPosition(rectX, baseH + hPlayers*i);
@@ -323,13 +345,16 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
 
         j++;
         text.setPosition(textX, baseH + hPlayers*i + hLines*j);
-        text.setString("  score: " + std::to_string(_score[i]));
+        text.setString("  score: " + std::to_string(_score[info.playerID]));
         _pInfoTexts.push_back(text);
 
-        j++;
-        text.setPosition(textX, baseH + hPlayers*i + hLines*j);
-        text.setString("  #cells: " + std::to_string(_cellCount[i]));
-        _pInfoTexts.push_back(text);
+        if (!_isSuddenDeath)
+        {
+            j++;
+            text.setPosition(textX, baseH + hPlayers*i + hLines*j);
+            text.setString("  #cells: " + std::to_string(_cellCount[info.playerID]));
+            _pInfoTexts.push_back(text);
+        }
 
         j++;
         text.setPosition(textX, baseH + hPlayers*i + hLines*j);
