@@ -285,24 +285,18 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
     else
         _playersInfo = playersInfo;
 
+    typedef std::tuple<int, int, int> ScorePidIndex;
+    std::vector<ScorePidIndex> pInfoTravarsalOrder;
+    for (int i = 0; i < _playersInfo.size(); i++)
+    {
+        const auto & info = _playersInfo[i];
+        pInfoTravarsalOrder.push_back(std::make_tuple(_score[info.playerID], info.playerID, i));
+    }
+
     if (_isSuddenDeath)
     {
-        // Remove special player.
-        std::vector<netorcai::PlayerInfo> pInfoTmp;
-        for (const auto & pInfo : _playersInfo)
-        {
-            if (pInfo.playerID > 0)
-                pInfoTmp.push_back(pInfo);
-        }
-
-        // Sort players by score.
-        sort(pInfoTmp.begin(), pInfoTmp.end(),
-            [this](const netorcai::PlayerInfo & a, const netorcai::PlayerInfo & b) -> bool
-        {
-            return _score[a.playerID] > _score[b.playerID];
-        });
-
-        _playersInfo = pInfoTmp;
+        // Sort traversal order by decreasing score.
+        std::sort(pInfoTravarsalOrder.begin(), pInfoTravarsalOrder.end(), std::greater());
     }
 
     // Update rendering data
@@ -326,9 +320,11 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
 
     _statusText.setPosition(textX, hLines);
 
-    for (unsigned int i = 0; i < _playersInfo.size(); i++)
+    for (int i = 0; i < pInfoTravarsalOrder.size(); i++)
     {
-        const netorcai::PlayerInfo & info = _playersInfo[i];
+        const auto & scorePidIndex = pInfoTravarsalOrder[i];
+        const int originalI = std::get<2>(scorePidIndex);
+        const netorcai::PlayerInfo & info = _playersInfo[originalI];
         int j = -1;
 
         sf::RectangleShape rect(sf::Vector2f(_piRectWidth, hPlayers));
