@@ -296,7 +296,7 @@ void HexabombRenderer::updatePlayerInfo(int currentTurnNumber,
     if (_isSuddenDeath)
     {
         // Sort traversal order by decreasing score.
-      std::sort(pInfoTravarsalOrder.begin(), pInfoTravarsalOrder.end(), std::greater<std::tuple<int,int,int>>());
+        std::sort(pInfoTravarsalOrder.begin(), pInfoTravarsalOrder.end(), std::greater<std::tuple<int,int,int>>());
     }
 
     // Update rendering data
